@@ -23,7 +23,8 @@ Author: **Chong Zhang** (ETH Zurich). License: [MIT](LICENSE).
 *Solid robot: the trained policy simulated in Isaac Lab with MuJoCo-Warp. Blue ghost: the reference
 motion. Clips: dance, jumps, fall-and-get-up, sprint.*
 
-Progress and timestamps: [MILESTONES.md](MILESTONES.md).
+Progress and timestamps: [MILESTONES.md](MILESTONES.md). Chinese step-by-step guide with
+troubleshooting notes: [README_CN.md](README_CN.md).
 
 ## Layout
 
@@ -33,7 +34,7 @@ Progress and timestamps: [MILESTONES.md](MILESTONES.md).
 | `docker/` | `Dockerfile`: `supermimic:latest` = `isaac-lab-kitless:main-46d6cc3` (built from `IsaacLab/docker/Dockerfile.kitless`) + tmux, ffmpeg, gcc (for `torch.compile`); `run_container.sh` |
 | `data/` | not tracked; `tools/download_data.sh` fetches LAFAN1 G1 retargets (HF `lvhaidong/LAFAN1_Retargeting_Dataset`) and the G1 URDF/meshes, then builds `g1_29dof.xml` (MJCF) and the USD |
 | `supermimic/` | implementation (see below) |
-| `tools/` | setup, asset conversion, tests, benchmark, plotting, rendering, failure analysis |
+| `tools/` | setup, asset conversion, tests, benchmark, plotting, rendering, failure analysis, browser playback (`viser_play.py`) |
 | `logs/<run>/` | not tracked: `train_log.csv`, `eval.csv`, checkpoints, stdout |
 | `results/` | success curve and highlight GIF (full videos are rendered locally with `tools/render.py`) |
 
@@ -57,6 +58,8 @@ Newer `main` commits may work but are untested.
 
 ```bash
 tools/setup.sh
+# Docker Hub unreachable? pull its images through a mirror:
+# DOCKER_MIRROR=docker.m.daocloud.io tools/setup.sh
 ```
 
 which is equivalent to:
@@ -71,7 +74,7 @@ docker build -t supermimic:latest docker/     # + tmux, ffmpeg, gcc, NVIDIA EGL 
 Then start the long-lived container (repository mounted at `/workspace/supermimic`):
 
 ```bash
-docker/run_container.sh 0 128g     # GPU index 0, 128 GB memory cap
+docker/run_container.sh 0 128g     # GPU index 0, 128 GB memory cap; publishes port 8080 (VISER_PORT) for viser
 ```
 
 ### 2. Data: LAFAN1 motions and the G1 model
@@ -117,9 +120,10 @@ docker exec supermimic python tools/test_env.py
 CPUS=0-23 ./run_train.sh lafan1_main          # training in tmux session 'lafan1_main' (optional CPU pinning)
 docker exec -it supermimic tmux attach -t lafan1_main
 docker exec supermimic tmux new -d -s eval_main "cd /workspace/supermimic && python supermimic/evaluate.py --run_dir logs/lafan1_main --watch"
-docker exec supermimic python tools/plot.py logs/lafan1_main --out results/success_curve.png
+docker exec supermimic python tools/plot.py logs/lafan1_main --out logs/lafan1_main/success_curve.png   # next to the run, not over results/success_curve.png
 docker exec supermimic python supermimic/evaluate.py --run_dir logs/lafan1_main --ckpt logs/lafan1_main/ckpt_014000.pt --record traj.npz
 docker exec supermimic python tools/render.py traj.npz out.mp4 --clips dance2_subject1 --seconds 10
+docker exec -it supermimic python tools/viser_play.py traj.npz    # interactive playback at http://localhost:8080
 ```
 
 The first iterations are slow while `torch.compile` builds its kernels (cached in `.cache/`).
