@@ -1,0 +1,477 @@
+{
+  "_comment": "SMPL-X -> nemo_v3 (retarget/MILESTONE.md 5.2). Same file for nemo_v3_full / nemo_v3_hw. Scales are defaults; retarget/scripts/gvhmr_to_nemov3.py rescales legs/arms per clip from the subject's measured limb lengths. GMR applies table-1 offsets to every scaled body, so every scaled body also has a (weak) table-1 entry. Limb rotation targets are ~0 (1e-3): the T1 rotation offset does not match SMPL-X limb frames, and with weight >= 1 they fought the position targets (forearm direction cos 0.15, hand error 0.24 m -> 1.00 / 0.004 m without them). Arm targets are re-chained from the robot shoulders in gvhmr_to_nemov3.py.",
+  "robot_root_name": "link_leg2pelvis",
+  "human_root_name": "pelvis",
+  "ground_height": 0.0,
+  "human_height_assumption": 1.8,
+  "use_ik_match_table1": true,
+  "use_ik_match_table2": true,
+  "human_scale_table": {
+    "pelvis": 0.4,
+    "spine3": 0.4,
+    "left_knee": 0.4,
+    "right_knee": 0.4,
+    "left_ankle": 0.4,
+    "right_ankle": 0.4,
+    "left_foot": 0.4,
+    "right_foot": 0.4,
+    "left_shoulder": 0.36,
+    "right_shoulder": 0.36,
+    "left_elbow": 0.36,
+    "right_elbow": 0.36,
+    "left_wrist": 0.36,
+    "right_wrist": 0.36
+  },
+  "ik_match_table1": {
+    "link_leg2pelvis": [
+      "pelvis",
+      100,
+      10,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_torso": [
+      "spine3",
+      0,
+      50,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_wheel_center": [
+      "left_ankle",
+      50,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_wheel_center": [
+      "right_ankle",
+      50,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_wheel_heading": [
+      "left_foot",
+      20,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_wheel_heading": [
+      "right_foot",
+      20,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_calf_link": [
+      "left_knee",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_calf_link": [
+      "right_knee",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_lShoulderPitch": [
+      "left_shoulder",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_rShoulderPitch": [
+      "right_shoulder",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_lElbow": [
+      "left_elbow",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_rElbow": [
+      "right_elbow",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_hand_point": [
+      "left_wrist",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_hand_point": [
+      "right_wrist",
+      0,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ]
+  },
+  "ik_match_table2": {
+    "link_leg2pelvis": [
+      "pelvis",
+      100,
+      5,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_torso": [
+      "spine3",
+      0,
+      20,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_calf_link": [
+      "left_knee",
+      10,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_calf_link": [
+      "right_knee",
+      10,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_wheel_center": [
+      "left_ankle",
+      50,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_wheel_center": [
+      "right_ankle",
+      50,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_wheel_heading": [
+      "left_foot",
+      20,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_wheel_heading": [
+      "right_foot",
+      20,
+      0,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_lShoulderPitch": [
+      "left_shoulder",
+      5,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_rShoulderPitch": [
+      "right_shoulder",
+      5,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_lElbow": [
+      "left_elbow",
+      20,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "link_rElbow": [
+      "right_elbow",
+      20,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "left_hand_point": [
+      "left_wrist",
+      20,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ],
+    "right_hand_point": [
+      "right_wrist",
+      20,
+      0.001,
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        -0.5,
+        -0.5,
+        -0.5
+      ]
+    ]
+  }
+}
