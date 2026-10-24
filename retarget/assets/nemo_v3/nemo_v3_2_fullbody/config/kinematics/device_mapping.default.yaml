@@ -1,0 +1,47 @@
+schema_version: 1
+robot_id: nemo_v3_2_default_uncalibrated
+mechanisms:
+  torso:
+    solver_model: torso.dual_linear.v1
+    profile_id: nemo.v3_2.torso.dual_linear.v1
+    profile_revision: 1
+    actuators:
+      left:
+        sign: 1
+        offset: 0.0
+      right:
+        sign: 1
+        offset: 0.0
+  neck:
+    solver_model: neck.dual_rotary.v1
+    profile_id: nemo.v3_2.neck.dual_rotary.v1
+    profile_revision: 1
+    actuators:
+      left:
+        sign: 1
+        offset: 0.0
+      right:
+        sign: 1
+        offset: 0.0
+  left_eye:
+    solver_model: eye.dual_linkage.v1
+    profile_id: nemo.v3_2.left_eye.dual_linkage.v1
+    profile_revision: 1
+    actuators:
+      left:
+        sign: 1
+        offset: 0.0
+      right:
+        sign: 1
+        offset: 0.0
+  right_eye:
+    solver_model: eye.dual_linkage.v1
+    profile_id: nemo.v3_2.right_eye.dual_linkage.v1
+    profile_revision: 2
+    actuators:
+      left:
+        sign: 1
+        offset: 0.0
+      right:
+        sign: 1
+        offset: 0.0

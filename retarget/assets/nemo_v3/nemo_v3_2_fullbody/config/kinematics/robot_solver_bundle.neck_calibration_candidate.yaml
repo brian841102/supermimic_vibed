@@ -1,0 +1,23 @@
+schema_version: 1
+bundle_id: nemo_v3_2.neck_calibration_candidate
+bundle_revision: 2
+robot_description_revision: robot_descriptions@da2d1051fc92fd240b346becba1754c266ef950e
+sdk_requirement: ">=1.0,<2.0"
+device_mapping: device_mapping.neck_calibration_candidate.yaml
+mechanisms:
+  torso:
+    component: torso
+    model: torso.dual_linear.v1
+    profile: ../../../nemo_v3_2_waist_detail/config/kinematics/torso.dual_linear.v1.yaml
+  neck:
+    component: neck
+    model: neck.dual_rotary.v1
+    profile: ../../../nemo_v3_2_head_detail/config/kinematics/neck.dual_rotary.calibrated_candidate.v2.yaml
+  left_eye:
+    component: eye
+    model: eye.dual_linkage.v1
+    profile: ../../../nemo_v3_2_head_detail/config/kinematics/left_eye.dual_linkage.v1.yaml
+  right_eye:
+    component: eye
+    model: eye.dual_linkage.v1
+    profile: ../../../nemo_v3_2_head_detail/config/kinematics/right_eye.dual_linkage.v1.yaml
