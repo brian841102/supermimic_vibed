@@ -56,6 +56,10 @@ class RewardCfg:
     root_ori_std: float = 0.4
     w_action_rate: float = -0.1
     w_joint_limit: float = -2.0
+    # robots with SPEC.lift_points only: per metre a lifted reference point (above the lowest one by > lift_floor_on) is
+    # below its reference. Linear, so its pull does not fade with distance like the exp term (MILESTONE 20.7-20.9)
+    w_lift_floor: float = -10.0
+    lift_floor_on: float = 0.02
     soft_limit_factor: float = 0.9
     term_height: float = SPEC.term_height
     term_tilt: float = 0.8
@@ -146,12 +150,16 @@ class MDP:
             + 0.5 * torch.exp(-e_rp / c.root_pos_std**2)
             + 0.5 * torch.exp(-e_ro / c.root_ori_std**2)
         )
+        r_floor = torch.zeros_like(r_track)
         if W_LIFT:
-            e_lift = ((self.lift_height(m.body_p[f], m.body_R[f]) - self.lift_height(bp, bR)) ** 2).mean(-1)
+            z_ref, z = self.lift_height(m.body_p[f], m.body_R[f]), self.lift_height(bp, bR)
+            e_lift = ((z_ref - z) ** 2).mean(-1)
             r_track = r_track + W_LIFT * torch.exp(-e_lift / SPEC.lift_std**2)
+            up = (z_ref - z_ref.min(-1, keepdim=True).values) > c.lift_floor_on  # reference lifts this wheel
+            r_floor = (torch.relu(z_ref - z) * up).sum(-1)
         r_rate = ((a - a_prev) ** 2).sum(-1)
         r_lim = (torch.relu(q - self.soft_hi) + torch.relu(self.soft_lo - q)).sum(-1)
-        r = (r_track + c.w_action_rate * r_rate + c.w_joint_limit * r_lim) * CONTROL_DT
+        r = (r_track + c.w_action_rate * r_rate + c.w_joint_limit * r_lim + c.w_lift_floor * r_floor) * CONTROL_DT
         if terms:
             return r, {
                 "track": r_track * CONTROL_DT,
@@ -160,7 +168,7 @@ class MDP:
                 "e_root_pos": e_rp,
                 "action_rate": r_rate,
                 "joint_limit": r_lim,
-                **({"e_lift": e_lift} if W_LIFT else {}),
+                **({"e_lift": e_lift, "lift_floor": r_floor} if W_LIFT else {}),
             }
         return r
 
