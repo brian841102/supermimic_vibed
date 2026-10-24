@@ -16,7 +16,7 @@ conda activate gvhmr
 
 # 2. world trajectory from camera rotation + in-camera position (glides), 3. retarget, 4. comparison videos
 conda activate gmr
-python "$RT/scripts/gvhmr_camera_traj.py" --pred "$D/gvhmr_nopp/$NAME/hmr4d_results.pt" --out "$D/gvhmr_cam/$NAME/hmr4d_results.pt" --pos_sigma 8
+python "$RT/scripts/gvhmr_camera_traj.py" --pred "$D/gvhmr_nopp/$NAME/hmr4d_results.pt" --out "$D/gvhmr_cam/$NAME/hmr4d_results.pt" --pos_sigma 8 --video "$VIDEO"  # zoom-aware
 python "$RT/scripts/gvhmr_to_nemov3.py" --gvhmr_pred_file "$D/gvhmr_cam/$NAME/hmr4d_results.pt" --out_dir "$D/retarget_out" --name "$NAME"
 for V in full hw; do
   CUDA_VISIBLE_DEVICES=$GPU MUJOCO_GL=egl python "$RT/tools/render_compare.py" --motion "$D/retarget_out/${NAME}_$V.pkl" --video "$VIDEO" \
