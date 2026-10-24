@@ -18,9 +18,11 @@
 
 ## 训练与评估
 - 在容器 `supermimic` 里跑（`docker/run_container.sh <GPU> 128g`），训练、评估各开一个 tmux。
+- 训练目录：`--exp_name <实验> --run_name <这次改了什么>` -> `logs/<实验>/<YYYY-mm-dd_HH-MM-SS>_<run_name>/`（同 mjlab），
+  `logs/<实验>/latest` 指向最新一次；同一组实验的多次尝试都放在同一个 `<实验>` 底下。
 - checkpoint / 评估频率：**3000 轮之前每 1000 轮，之后每 500 轮**：
   `supermimic/train.py ... --ckpt_every 1000 --ckpt_every_late 500 --ckpt_late_from 3000`，
-  另开 `supermimic/evaluate.py --run_dir <run> --watch` 评估每个 checkpoint。
+  另开 `supermimic/evaluate.py --run_dir logs/<实验>/latest --watch` 评估每个 checkpoint。
 - 每次评估都回报（回报、失败段数）；回报不上升就立即停下来查原因并修正。
 - 饱和判定：连续 3 次评估都没有超过「最好成绩 + 0.005」即停止，然后把最好的 checkpoint 放到 viser 并给出网址。
 - 曲线：训练只写 CSV；`tools/csv_to_tensorboard.py logs/<run> --watch`（在容器里跑，`logs/` 归容器的 root 所有），
