@@ -1,0 +1,6 @@
+[submodule "retarget/third_party/GVHMR"]
+	path = retarget/third_party/GVHMR
+	url = https://github.com/zju3dv/GVHMR
+[submodule "retarget/third_party/GMR"]
+	path = retarget/third_party/GMR
+	url = https://github.com/YanjieZe/GMR

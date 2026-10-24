@@ -16,3 +16,9 @@ logs/
 results/analysis/
 # third-party paper
 *.pdf
+
+# retarget: videos / estimation results / rendered videos are never committed (copyright, size).
+# retarget/assets/ is committed; retarget/third_party/{GVHMR,GMR} are submodules.
+retarget/data/
+retarget/third_party/.ytdlp/
+retarget/third_party/*.log
