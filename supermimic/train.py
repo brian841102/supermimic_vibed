@@ -42,7 +42,9 @@ parser.add_argument("--ckpt_late_from", type=int, default=3000)
 parser.add_argument("--log_every", type=int, default=50)
 parser.add_argument("--motion_dir", type=str, default=None, help="default: the robot spec's motion_dir")
 parser.add_argument("--robot", type=str, default=None, help="g1 | nemov3 (default: $SUPERMIMIC_ROBOT or g1)")
-parser.add_argument("--log_dir", type=str, default=os.path.join(REPO, "logs", "run"))
+parser.add_argument("--log_dir", type=str, default=os.path.join(REPO, "logs", "run"), help="used when --exp_name is not given")
+parser.add_argument("--exp_name", type=str, default=None, help="log to logs/<exp_name>/<YYYY-mm-dd_HH-MM-SS>[_<run_name>] (as mjlab)")
+parser.add_argument("--run_name", type=str, default="", help="suffix of the run folder under --exp_name")
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--resume", type=str, default=None)
 parser.add_argument("--amp", type=str, default="bf16", choices=["none", "bf16"], help="autocast dtype for MLP matmuls")
@@ -71,11 +73,20 @@ torch.backends.cudnn.allow_tf32 = True
 torch.manual_seed(args.seed)
 networks.AMP_DTYPE = torch.bfloat16 if args.amp == "bf16" else None
 dev = "cuda:0"
+if args.exp_name and not args.resume:
+    exp_dir = os.path.join(REPO, "logs", args.exp_name)
+    args.log_dir = os.path.join(exp_dir, time.strftime("%Y-%m-%d_%H-%M-%S") + (f"_{args.run_name}" if args.run_name else ""))
+    os.makedirs(args.log_dir)
+    latest = os.path.join(exp_dir, "latest")  # -> newest run, for evaluate.py --watch / viewers
+    if os.path.islink(latest):
+        os.remove(latest)
+    os.symlink(os.path.basename(args.log_dir), latest)
 os.makedirs(args.log_dir, exist_ok=True)
+print(f"log dir: {args.log_dir}", flush=True)
+args.motion_dir = args.motion_dir or get_spec().motion_dir
 json.dump(vars(args), open(os.path.join(args.log_dir, "args.json"), "w"), indent=2)
 
 kin = Kinematics(dev)
-args.motion_dir = args.motion_dir or get_spec().motion_dir
 motion = MotionLib.from_dir(args.motion_dir, kin, dev)
 mdp = MDP(kin, motion, torch.tensor(get_spec().default_q, device=dev))
 K, Hh, HZ = args.goal_frames, args.hist, args.horizon
