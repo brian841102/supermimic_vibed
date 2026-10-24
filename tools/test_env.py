@@ -16,18 +16,20 @@ args = parser.parse_args()
 import torch
 
 from supermimic.env import TrackingSim, make_sim
-from supermimic.kinematics import G1Kinematics
+from supermimic.kinematics import Kinematics
 from supermimic.mdp import MDP
 from supermimic.motion import MotionLib
-from supermimic.robot import TRACKED_BODIES, default_joint_pos_list
+from supermimic.robot_spec import get_spec
 from supermimic.rotations import quat_to_mat, rot_angle_sq
 
 dev = "cuda:0"
-kin = G1Kinematics(dev)
+spec = get_spec()
+print('robot', spec.name, 'joints', spec.num_joints)
+kin = Kinematics(dev)
 t0 = time.time()
-motion = MotionLib.from_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "lafan1_g1"), kin, dev)
+motion = MotionLib.from_dir(spec.motion_dir, kin, dev)
 print(f"motion: {len(motion.names)} clips, {motion.num_frames} frames ({motion.num_frames * 0.02 / 3600:.2f} h), bins {motion.num_bins}, load {time.time() - t0:.1f}s")
-mdp = MDP(kin, motion, torch.tensor(default_joint_pos_list(), device=dev))
+mdp = MDP(kin, motion, torch.tensor(spec.default_q, device=dev))
 sim_cfg = make_sim(dev, args)
 with launch_simulation(sim_cfg, args):
     env = TrackingSim(sim_cfg, args.num_envs, motion, mdp, eval_mode=True)
@@ -41,7 +43,7 @@ with launch_simulation(sim_cfg, args):
         print(f"roundtrip {n}: max err {(a - b).abs().max().item():.2e}")
     # FK vs sim body frames
     d = env.robot.data
-    ids = [env.robot.body_names.index(b) for b in TRACKED_BODIES]
+    ids = [env.robot.body_names.index(b) for b in spec.tracked_bodies]
     sp = d.body_link_pose_w.torch[:, ids, :3]
     sq = d.body_link_pose_w.torch[:, ids, 3:7]
     sR_xyzw = quat_to_mat(torch.cat((sq[..., 3:4], sq[..., :3]), -1))
@@ -56,7 +58,7 @@ with launch_simulation(sim_cfg, args):
     rs = []
     for t in range(150):
         f1 = env.f + 1
-        a = (motion.q[f1] - env.default_q) / env.alpha
+        a = torch.where(env.vel, motion.qd[f1], motion.q[f1] - env.default_q) / env.alpha  # wheels: velocity actions
         out = env.step(a)
         rs.append(out["r"].mean().item() / 0.1)
         if t % 25 == 0:

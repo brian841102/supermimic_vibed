@@ -25,27 +25,32 @@ parser.add_argument("--run_dir", type=str, required=True)
 parser.add_argument("--watch", action="store_true")
 parser.add_argument("--ckpt", type=str, default=None, help="evaluate one checkpoint")
 parser.add_argument("--record", type=str, default=None, help="save trajectories (npz) for rendering")
-parser.add_argument("--motion_dir", type=str, default=os.path.join(REPO, "data", "lafan1_g1"))
+parser.add_argument("--motion_dir", type=str, default=None, help="default: the robot spec's motion_dir")
+parser.add_argument("--robot", type=str, default=None, help="g1 | nemov3 (default: $SUPERMIMIC_ROBOT or g1)")
 parser.add_argument("--every", type=int, default=1, help="evaluate every n-th checkpoint")
 add_launcher_args(parser)
 args = parser.parse_args()
+if args.robot:
+    os.environ["SUPERMIMIC_ROBOT"] = args.robot  # before supermimic.mdp is imported
+args.robot = os.environ.get("SUPERMIMIC_ROBOT", "g1")
 
 import numpy as np
 import torch
 
 import supermimic.networks as networks
 from supermimic.env import TrackingSim, make_sim
-from supermimic.kinematics import G1Kinematics
-from supermimic.mdp import MAX_STEP_REWARD, OBS_DIM, MDP
+from supermimic.kinematics import Kinematics
+from supermimic.mdp import MAX_STEP_REWARD, NUM_J, OBS_DIM, MDP
 from supermimic.motion import MotionLib
 from supermimic.networks import Policy
-from supermimic.robot import default_joint_pos_list
+from supermimic.robot_spec import get_spec
 
 torch.backends.cuda.matmul.allow_tf32 = True
 dev = "cuda:0"
-kin = G1Kinematics(dev)
+kin = Kinematics(dev)
+args.motion_dir = args.motion_dir or get_spec().motion_dir
 motion = MotionLib.from_dir(args.motion_dir, kin, dev)
-mdp = MDP(kin, motion, torch.tensor(default_joint_pos_list(), device=dev))
+mdp = MDP(kin, motion, torch.tensor(get_spec().default_q, device=dev))
 C = len(motion.names)
 
 
@@ -54,7 +59,7 @@ def evaluate(env: TrackingSim, ck: dict, record: str | None = None) -> dict:
     a_ = ck["args"]
     K, Hh = a_["goal_frames"], a_["hist"]
     networks.AMP_DTYPE = torch.bfloat16 if a_.get("amp", "none") == "bf16" else None
-    pi = Policy(OBS_DIM, 73 * K, hist=Hh).to(dev)
+    pi = Policy(OBS_DIM, (15 + 2 * NUM_J) * K, hist=Hh).to(dev)
     pi.load_state_dict(ck["pi"])
     pi.eval()
     ids = torch.arange(C, device=dev)

@@ -8,6 +8,7 @@ Usage: python tools/viser_play.py traj.npz [--port 8080] [--eval logs/<run>/ckpt
 import argparse
 import json
 import os
+import sys
 import time
 
 import mujoco
@@ -15,7 +16,8 @@ import numpy as np
 import viser
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-MJCF = os.path.join(ROOT, "data", "g1_description", "g1_29dof.xml")
+sys.path.insert(0, ROOT)
+from supermimic.robot_spec import get_spec  # noqa: E402  (SUPERMIMIC_ROBOT=g1|nemov3, or --robot)
 DT = 0.02  # 50 Hz control
 
 
@@ -33,7 +35,7 @@ def mesh_arrays(model: mujoco.MjModel, mesh_id: int):
 
 
 class Robot:
-    """One G1 in the viser scene: a mesh handle per visual geom, posed from qpos via MuJoCo FK."""
+    """One robot in the viser scene: a mesh handle per visual geom, posed from qpos via MuJoCo FK."""
 
     def __init__(self, server: viser.ViserServer, model: mujoco.MjModel, name: str, color, opacity: float | None):
         self.model, self.data = model, mujoco.MjData(model)
@@ -65,13 +67,19 @@ def main():
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--host", type=str, default="0.0.0.0")
     ap.add_argument("--eval", type=str, default=None, help="optional ckpt_*_eval.json to show per-clip normalized return")
+    ap.add_argument("--robot", type=str, default=None, help="g1 | nemov3 (default: $SUPERMIMIC_ROBOT or g1)")
     a = ap.parse_args()
+    if a.robot:
+        os.environ["SUPERMIMIC_ROBOT"] = a.robot
 
     d = dict(np.load(a.traj))
     names = [str(n) for n in d["names"]]
     per_clip = json.load(open(a.eval))["per_clip"] if a.eval else {}
-    model = mujoco.MjModel.from_xml_path(MJCF)
-    assert model.nq == 36, model.nq
+    spec = get_spec()
+    model = mujoco.MjModel.from_xml_path(spec.mjcf_path)
+    # q columns are in robot_spec order; the MJCF may declare its joints in another order
+    qadr = np.array([model.jnt_qposadr[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in spec.joint_names])
+    assert model.nq == 7 + spec.num_joints and d["q"].shape[-1] == spec.num_joints, (model.nq, d["q"].shape)
 
     server = viser.ViserServer(host=a.host, port=a.port)
     server.scene.set_up_direction("+z")
@@ -82,8 +90,9 @@ def main():
 
     @server.on_client_connect
     def _(client: viser.ClientHandle):
-        client.camera.position = (3.0, -3.0, 1.6)
-        client.camera.look_at = (0.0, 0.0, 0.8)
+        k = spec.length_scale  # nemo_v3 is about half the size of the G1
+        client.camera.position = (3.0 * k, -3.0 * k, 1.6 * k)
+        client.camera.look_at = (0.0, 0.0, 0.8 * k)
 
     with server.gui.add_folder("Playback"):
         clip_dd = server.gui.add_dropdown("Clip", options=tuple(names), initial_value=names[0])
@@ -114,7 +123,7 @@ def main():
         status = "**terminated (fell)**" if fell else "completed"
         info.content = (
             f"**{name}**  \nlength {state['steps'] * DT:.1f} s · {status} · normalized return {ret}  \n"
-            "grey: simulated G1 policy (Isaac Lab + MuJoCo-Warp) · blue ghost: reference motion"
+            f"grey: simulated {spec.name} policy (Isaac Lab + MuJoCo-Warp) · blue ghost: reference motion"
         )
 
     @clip_dd.on_update
@@ -135,7 +144,7 @@ def main():
 
     select(names[0])
     print(f"viser playback of {len(names)} clips: open http://localhost:{a.port}", flush=True)
-    qpos_r, qpos_g = np.zeros(36), np.zeros(36)
+    qpos_r, qpos_g = model.qpos0.copy(), model.qpos0.copy()
     rquat = np.empty(4)
     last = time.time()
     while True:
@@ -149,12 +158,14 @@ def main():
         c = state["c"]
         tt = min(int(round(t_slider.value / DT)), state["steps"] - 1)
         f = int(d["f"][tt, c])
-        qpos_r[0:3], qpos_r[3:7], qpos_r[7:] = d["root_p"][tt, c], d["root_quat"][tt, c], d["q"][tt, c]
+        qpos_r[0:3], qpos_r[3:7] = d["root_p"][tt, c], d["root_quat"][tt, c]
+        qpos_r[qadr] = d["q"][tt, c]
         qpos_g[0:3] = d["ref_root_p"][f]
         if anchor.value:  # as the tracking reward does: reference anchored at the robot's xy
             qpos_g[0:2] = qpos_r[0:2]
         mujoco.mju_mat2Quat(rquat, d["ref_root_R"][f].reshape(-1).astype(np.float64))
-        qpos_g[3:7], qpos_g[7:] = rquat, d["ref_q"][f]
+        qpos_g[3:7] = rquat
+        qpos_g[qadr] = d["ref_q"][f]
         with server.atomic():
             robot.set_qpos(qpos_r)
             if show_ghost.value:
