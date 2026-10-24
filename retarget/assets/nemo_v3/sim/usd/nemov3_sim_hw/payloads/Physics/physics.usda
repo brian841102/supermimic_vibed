@@ -1,0 +1,1625 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "MuJoCo USD Converter v0.6.1"
+    }
+    defaultPrim = "nemov3_sim_hw"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+over "nemov3_sim_hw"
+{
+    over "Geometry"
+    {
+        over "link_leg2pelvis" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsArticulationRootAPI", "NewtonArticulationRootAPI"]
+        )
+        {
+            uniform bool newton:jointsAddMobility = 1
+            bool newton:selfCollisionEnabled = 0
+            point3f physics:centerOfMass = (-0.0000691, 0.000221, -0.047999)
+            float3 physics:diagonalInertia = (0.000405206, 0.000281148, 0.000189046)
+            float physics:mass = 0.38558
+            quatf physics:principalAxes = (0.05546371, 0.70492303, -0.050433207, 0.70531106)
+
+            over "link_pelvisYaw" (
+                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsFilteredPairsAPI"]
+            )
+            {
+                point3f physics:centerOfMass = (0.00625, 0.0000011, -0.023707)
+                float3 physics:diagonalInertia = (0.0000656565, 0.0000560435, 0.0000242)
+                rel physics:filteredPairs = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso>
+                float physics:mass = 0.12124
+                quatf physics:principalAxes = (0.6567462, 0.6567462, -0.2620771, 0.2620771)
+
+                over "link_pelvisPitch" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, 0)
+                    float3 physics:diagonalInertia = (0.000001, 8e-7, 8e-7)
+                    float physics:mass = 0.024604
+                    quatf physics:principalAxes = (0.5, 0.5, -0.5, 0.5)
+
+                    over "link_torso" (
+                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsFilteredPairsAPI"]
+                    )
+                    {
+                        point3f physics:centerOfMass = (-0.0614569, 0, 0.0801116)
+                        float3 physics:diagonalInertia = (0.0180974, 0.0154913, 0.00713128)
+                        rel physics:filteredPairs = [
+                            </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_rLinearOut/link_rLinear>,
+                            </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_lLinearOut/link_lLinear>,
+                        ]
+                        float physics:mass = 2.8107
+                        quatf physics:principalAxes = (0.94385713, 0, -0.33035403, 0)
+
+                        over "payload_box_collision" (
+                            prepend apiSchemas = ["NewtonCollisionAPI"]
+                        )
+                        {
+                            float newton:contactGap = 0
+                        }
+
+                        over "link_rShoulderPitch" (
+                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                        )
+                        {
+                            point3f physics:centerOfMass = (0.0024831, 0.0023746, -0.0000627)
+                            float3 physics:diagonalInertia = (0.000152509, 0.000124602, 0.000110589)
+                            float physics:mass = 0.31551
+                            quatf physics:principalAxes = (0.6997578, 0.7139158, 0.021893894, 0.013563097)
+
+                            over "link_rShoulderRoll" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (0.00553087, -0.00049175, -0.0425079)
+                                float3 physics:diagonalInertia = (0.000129938, 0.000125559, 0.0000420028)
+                                float physics:mass = 0.15482
+                                quatf physics:principalAxes = (0.69512516, 0.6860692, -0.18433906, -0.11013203)
+
+                                over "link_rShoulderYaw" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (0.0000904, -0.000787, 0.0022012)
+                                    float3 physics:diagonalInertia = (0.0000590089, 0.0000521954, 0.0000454956)
+                                    float physics:mass = 0.15907
+                                    quatf physics:principalAxes = (0.69649506, 0.010276501, -0.00019334101, 0.71748805)
+
+                                    over "link_rElbow" (
+                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                    )
+                                    {
+                                        point3f physics:centerOfMass = (-0.0002312, -0.0036634, -0.036434)
+                                        float3 physics:diagonalInertia = (0.000079178, 0.0000758891, 0.0000346329)
+                                        float physics:mass = 0.13901
+                                        quatf physics:principalAxes = (0.7118242, 0.16693304, -0.16294704, 0.6624862)
+
+                                        over "link_rWristRoll" (
+                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                        )
+                                        {
+                                            point3f physics:centerOfMass = (0.0000904, -0.000787, 0.0022012)
+                                            float3 physics:diagonalInertia = (0.0000590089, 0.0000521954, 0.0000454956)
+                                            float physics:mass = 0.15907
+                                            quatf physics:principalAxes = (0.69649506, 0.010276501, -0.00019334101, 0.71748805)
+
+                                            over "link_rWristPitch" (
+                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                            )
+                                            {
+                                                point3f physics:centerOfMass = (-0.0009721, -0.013827, -0.010764)
+                                                float3 physics:diagonalInertia = (0.0000199462, 0.0000167443, 0.00000980942)
+                                                float physics:mass = 0.03683
+                                                quatf physics:principalAxes = (0.66545403, 0.26020804, -0.20099203, 0.67012304)
+
+                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                {
+                                                    custom rel physics:body0
+                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw/link_rElbow/link_rWristRoll>
+                                                    custom rel physics:body1
+                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw/link_rElbow/link_rWristRoll/link_rWristPitch>
+                                                    point3f physics:localPos0 = (0, 0, 0)
+                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                }
+                                            }
+
+                                            def PhysicsRevoluteJoint "joint_rWristRoll" (
+                                                prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                            )
+                                            {
+                                                float newton:armature = 0.01
+                                                uniform token physics:axis = "Z"
+                                                custom rel physics:body0
+                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw/link_rElbow>
+                                                custom rel physics:body1
+                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw/link_rElbow/link_rWristRoll>
+                                                point3f physics:localPos0 = (0, -2.220446e-16, -0.092)
+                                                point3f physics:localPos1 = (0, 0, 0)
+                                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                                float physics:lowerLimit = -159.85522
+                                                float physics:upperLimit = 159.85522
+                                            }
+                                        }
+
+                                        def PhysicsRevoluteJoint "joint_rElbow" (
+                                            prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                        )
+                                        {
+                                            float newton:armature = 0.01
+                                            uniform token physics:axis = "Y"
+                                            custom rel physics:body0
+                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw>
+                                            custom rel physics:body1
+                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw/link_rElbow>
+                                            point3f physics:localPos0 = (0, -1.110223e-16, 0)
+                                            point3f physics:localPos1 = (0, 0, 0)
+                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                            float physics:lowerLimit = -89.95438
+                                            float physics:upperLimit = 89.95438
+                                        }
+                                    }
+
+                                    def PhysicsRevoluteJoint "joint_rShoulderYaw" (
+                                        prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    )
+                                    {
+                                        float newton:armature = 0.01
+                                        uniform token physics:axis = "Z"
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll/link_rShoulderYaw>
+                                        point3f physics:localPos0 = (0.000439351, -0.0000820219, -0.103)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (0.9999999, -0.0003926096, 0.00029030372, -1.1558803e-7)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                        float physics:lowerLimit = -159.85522
+                                        float physics:upperLimit = 159.85522
+                                    }
+                                }
+
+                                def PhysicsRevoluteJoint "joint_rShoulderRoll" (
+                                    prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                )
+                                {
+                                    float newton:armature = 0.01
+                                    uniform token physics:axis = "X"
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch/link_rShoulderRoll>
+                                    point3f physics:localPos0 = (0, 0, 0)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (0.7073882, -0.70682514, -0.00020809604, 0.00020826205)
+                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                    float physics:lowerLimit = -89.95438
+                                    float physics:upperLimit = 109.43494
+                                }
+                            }
+
+                            def PhysicsRevoluteJoint "joint_rShoulderPitch" (
+                                prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                            )
+                            {
+                                float newton:armature = 0.01
+                                uniform token physics:axis = "Y"
+                                custom rel physics:body0
+                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso>
+                                custom rel physics:body1
+                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_rShoulderPitch>
+                                point3f physics:localPos0 = (-0.0075, -0.115, 0.1045)
+                                point3f physics:localPos1 = (0, 0, 0)
+                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                float physics:lowerLimit = -179.90875
+                                float physics:upperLimit = 89.95438
+                            }
+                        }
+
+                        over "link_lShoulderPitch" (
+                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                        )
+                        {
+                            point3f physics:centerOfMass = (0.0024831, -0.0023746, -0.0000629)
+                            float3 physics:diagonalInertia = (0.000152509, 0.000124602, 0.000110589)
+                            float physics:mass = 0.31551
+                            quatf physics:principalAxes = (0.7139158, 0.6997578, -0.013563097, -0.021893894)
+
+                            over "link_lShoulderRoll" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (0.00538066, 0.000491566, -0.0425272)
+                                float3 physics:diagonalInertia = (0.000129938, 0.000125559, 0.0000420028)
+                                float physics:mass = 0.15482
+                                quatf physics:principalAxes = (0.6860692, 0.69512516, 0.11013203, 0.18433906)
+
+                                over "link_lShoulderYaw" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (0.0000905, 0.000787, 0.0022012)
+                                    float3 physics:diagonalInertia = (0.0000590089, 0.0000521954, 0.0000454956)
+                                    float physics:mass = 0.15907
+                                    quatf physics:principalAxes = (0.717488, -0.000193341, 0.0102765, 0.696495)
+
+                                    over "link_lElbow" (
+                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                    )
+                                    {
+                                        point3f physics:centerOfMass = (-0.000231, 0.0036634, -0.036434)
+                                        float3 physics:diagonalInertia = (0.000079178, 0.0000758891, 0.0000346329)
+                                        float physics:mass = 0.139
+                                        quatf physics:principalAxes = (0.6624862, -0.16294704, 0.16693304, 0.71182424)
+
+                                        over "link_lWristRoll" (
+                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                        )
+                                        {
+                                            point3f physics:centerOfMass = (0.0000905, 0.000787, 0.0022012)
+                                            float3 physics:diagonalInertia = (0.0000590089, 0.0000521954, 0.0000454956)
+                                            float physics:mass = 0.15907
+                                            quatf physics:principalAxes = (0.717488, -0.000193341, 0.0102765, 0.696495)
+
+                                            over "link_lWristPitch" (
+                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                            )
+                                            {
+                                                point3f physics:centerOfMass = (-0.0009715, 0.013827, -0.010763)
+                                                float3 physics:diagonalInertia = (0.0000199462, 0.0000167443, 0.00000980942)
+                                                float physics:mass = 0.036827
+                                                quatf physics:principalAxes = (0.67012304, -0.20099203, 0.26020804, 0.66545403)
+
+                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                {
+                                                    custom rel physics:body0
+                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw/link_lElbow/link_lWristRoll>
+                                                    custom rel physics:body1
+                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw/link_lElbow/link_lWristRoll/link_lWristPitch>
+                                                    point3f physics:localPos0 = (0, 0, 0)
+                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                }
+                                            }
+
+                                            def PhysicsRevoluteJoint "joint_lWristRoll" (
+                                                prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                            )
+                                            {
+                                                float newton:armature = 0.01
+                                                uniform token physics:axis = "Z"
+                                                custom rel physics:body0
+                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw/link_lElbow>
+                                                custom rel physics:body1
+                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw/link_lElbow/link_lWristRoll>
+                                                point3f physics:localPos0 = (0, 0, -0.092)
+                                                point3f physics:localPos1 = (0, 0, 0)
+                                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                                float physics:lowerLimit = -159.85522
+                                                float physics:upperLimit = 159.85522
+                                            }
+                                        }
+
+                                        def PhysicsRevoluteJoint "joint_lElbow" (
+                                            prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                        )
+                                        {
+                                            float newton:armature = 0.01
+                                            uniform token physics:axis = "Y"
+                                            custom rel physics:body0
+                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw>
+                                            custom rel physics:body1
+                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw/link_lElbow>
+                                            point3f physics:localPos0 = (0, 0, 0)
+                                            point3f physics:localPos1 = (0, 0, 0)
+                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                            float physics:lowerLimit = -89.95438
+                                            float physics:upperLimit = 89.95438
+                                        }
+                                    }
+
+                                    def PhysicsRevoluteJoint "joint_lShoulderYaw" (
+                                        prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    )
+                                    {
+                                        float newton:armature = 0.01
+                                        uniform token physics:axis = "Z"
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll/link_lShoulderYaw>
+                                        point3f physics:localPos0 = (0.0000754619, 0.0000820226, -0.103001)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (0.99999785, 0.00039297293, 0.0020339866, 8.09858e-7)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                        float physics:lowerLimit = -159.85522
+                                        float physics:upperLimit = 159.85522
+                                    }
+                                }
+
+                                def PhysicsRevoluteJoint "joint_lShoulderRoll" (
+                                    prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                )
+                                {
+                                    float newton:armature = 0.01
+                                    uniform token physics:axis = "X"
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch/link_lShoulderRoll>
+                                    point3f physics:localPos0 = (0, 0, 0)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (-0.0014566594, -0.0014578194, -0.70738673, -0.7068237)
+                                    quatf physics:localRot1 = (0, 0, -1, 0)
+                                    float physics:lowerLimit = -89.95438
+                                    float physics:upperLimit = 109.43494
+                                }
+                            }
+
+                            def PhysicsRevoluteJoint "joint_lShoulderPitch" (
+                                prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                            )
+                            {
+                                float newton:armature = 0.01
+                                uniform token physics:axis = "Y"
+                                custom rel physics:body0
+                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso>
+                                custom rel physics:body1
+                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/link_lShoulderPitch>
+                                point3f physics:localPos0 = (-0.0075, 0.115, 0.1045)
+                                point3f physics:localPos1 = (0, 0, 0)
+                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                float physics:lowerLimit = -179.90875
+                                float physics:upperLimit = 89.95438
+                            }
+                        }
+
+                        over "base_link" (
+                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                        )
+                        {
+                            point3f physics:centerOfMass = (-0.000262192, 0.0000179085, 0.0660038)
+                            float3 physics:diagonalInertia = (0.00163236, 0.00145512, 0.000371753)
+                            float physics:mass = 0.986993
+                            quatf physics:principalAxes = (0.99958485, 0.000060027593, 0.028808996, 0.00043473495)
+
+                            over "head_roll_Link" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (-0.0000595897, -1.77374e-7, 1.2733e-7)
+                                float3 physics:diagonalInertia = (8.95722e-7, 7.47912e-7, 5.63793e-7)
+                                float physics:mass = 0.0125442
+                                quatf physics:principalAxes = (0.5, 0.5, -0.5, 0.5)
+
+                                over "head_pitch_Link" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (-0.00246865, -0.00000939936, 0.0413686)
+                                    float3 physics:diagonalInertia = (0.000174835, 0.000165239, 0.00013858)
+                                    float physics:mass = 0.337063
+                                    quatf physics:principalAxes = (0.98068464, 0.00027395092, -0.19558893, -0.0016397494)
+
+                                    over "head_yaw_Link" (
+                                        prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+                                    )
+                                    {
+                                        over "head_support_Link" (
+                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                        )
+                                        {
+                                            point3f physics:centerOfMass = (0.107445, 0.0100861, -0.0000723653)
+                                            float3 physics:diagonalInertia = (0.00261113, 0.00248239, 0.00121217)
+                                            float physics:mass = 0.651424
+                                            quatf physics:principalAxes = (0.804544, 0.00042235, 0.000216545, 0.593893)
+
+                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                            {
+                                                custom rel physics:body0
+                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link>
+                                                custom rel physics:body1
+                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/head_support_Link>
+                                                point3f physics:localPos0 = (-0.0859895, 0, -0.00896009)
+                                                point3f physics:localPos1 = (0, 0, 0)
+                                                quatf physics:localRot0 = (0.7071068, 0.7071067, -1.7347235e-18, 1.3010426e-18)
+                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                            }
+                                        }
+
+                                        over "left_eye_pich_Link" (
+                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                        )
+                                        {
+                                            point3f physics:centerOfMass = (-0.0137, -3.18559e-8, 0.00331316)
+                                            float3 physics:diagonalInertia = (0.00000147838, 0.0000010949, 0.00000102695)
+                                            float physics:mass = 0.015029
+                                            quatf physics:principalAxes = (0.50087416, 0.49766216, 0.49912614, 0.5023252)
+
+                                            over "left_eye_yaw_Link" (
+                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                            )
+                                            {
+                                                point3f physics:centerOfMass = (0.0122395, -0.0000769239, 0.000478181)
+                                                float3 physics:diagonalInertia = (0.0000161192, 0.0000102098, 0.00000943412)
+                                                float physics:mass = 0.0412357
+                                                quatf physics:principalAxes = (0.99998987, -0.00045054095, 0.00031633896, -0.0044724196)
+
+                                                over "left_eye_yaw_01_Link" (
+                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                )
+                                                {
+                                                    point3f physics:centerOfMass = (3.02883e-7, 7.7578e-8, 0.0000302166)
+                                                    float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                    float physics:mass = 0.0000362893
+                                                    quatf physics:principalAxes = (0.0006656163, 0.7061113, -0.00057162123, 0.7081003)
+
+                                                    over "left_eye_pitch_01_Link" (
+                                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                    )
+                                                    {
+                                                        point3f physics:centerOfMass = (-0.0379997, -0.0000148765, 0.0000529669)
+                                                        float3 physics:diagonalInertia = (4.77563e-7, 4.76928e-7, 1.48204e-9)
+                                                        float physics:mass = 0.000644488
+                                                        quatf physics:principalAxes = (-0.020097205, 0.70689815, -0.019812606, 0.7067522)
+
+                                                        over "left_eye_yaw_01_A_cord" (
+                                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                        )
+                                                        {
+                                                            point3f physics:centerOfMass = (-1.48403e-8, 1.71848e-8, 0.000030219)
+                                                            float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                            float physics:mass = 0.0000362893
+                                                            quatf physics:principalAxes = (-0.046919912, 0.7055412, 0.046986412, 0.7055512)
+
+                                                            over "left_eye_yaw_01_A01_cord" (
+                                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                            )
+                                                            {
+                                                                point3f physics:centerOfMass = (0.0000882307, -0.0090542, 0.00394565)
+                                                                float3 physics:diagonalInertia = (7.92872e-9, 6.92191e-9, 1.7263e-9)
+                                                                float physics:mass = 0.000275542
+                                                                quatf physics:principalAxes = (0.51920104, 0.47972202, -0.47495103, 0.52413607)
+
+                                                                over "left_eye_yaw_01_B_cord" (
+                                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                                )
+                                                                {
+                                                                    point3f physics:centerOfMass = (-0.00000758272, 0.00586069, 0.0104278)
+                                                                    float3 physics:diagonalInertia = (4.19669e-7, 2.85191e-7, 2.31033e-7)
+                                                                    float physics:mass = 0.0030617
+                                                                    quatf physics:principalAxes = (0.9991882, 0.040280107, 0.00027416306, 0.00062836113)
+
+                                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                    {
+                                                                        custom rel physics:body0
+                                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link/left_eye_yaw_01_A_cord/left_eye_yaw_01_A01_cord>
+                                                                        custom rel physics:body1
+                                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link/left_eye_yaw_01_A_cord/left_eye_yaw_01_A01_cord/left_eye_yaw_01_B_cord>
+                                                                        point3f physics:localPos0 = (0.00011429, -0.0117, 0.0074943)
+                                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                    }
+                                                                }
+
+                                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                {
+                                                                    custom rel physics:body0
+                                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link/left_eye_yaw_01_A_cord>
+                                                                    custom rel physics:body1
+                                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link/left_eye_yaw_01_A_cord/left_eye_yaw_01_A01_cord>
+                                                                    point3f physics:localPos0 = (0, 0, 0)
+                                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                }
+                                                            }
+
+                                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                            {
+                                                                custom rel physics:body0
+                                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link>
+                                                                custom rel physics:body1
+                                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link/left_eye_yaw_01_A_cord>
+                                                                point3f physics:localPos0 = (-0.076, -0.000029748, 0.000014921)
+                                                                point3f physics:localPos1 = (0, 0, 0)
+                                                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                                            }
+                                                        }
+
+                                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                        {
+                                                            custom rel physics:body0
+                                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link>
+                                                            custom rel physics:body1
+                                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link/left_eye_pitch_01_Link>
+                                                            point3f physics:localPos0 = (0, 0, 0)
+                                                            point3f physics:localPos1 = (0, 0, 0)
+                                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                                        }
+                                                    }
+
+                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                    {
+                                                        custom rel physics:body0
+                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link>
+                                                        custom rel physics:body1
+                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_yaw_01_Link>
+                                                        point3f physics:localPos0 = (-0.0000643209, 0, 0.026292)
+                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                    }
+                                                }
+
+                                                over "left_eye_pitch_02_Link" (
+                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                )
+                                                {
+                                                    point3f physics:centerOfMass = (-2.58515e-8, -0.0000302148, 2.42566e-7)
+                                                    float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                    float physics:mass = 0.0000362893
+                                                    quatf physics:principalAxes = (0.6981468, 0.11269697, 0.11841897, 0.6970418)
+
+                                                    over "left_eye_yaw_02_Link" (
+                                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                    )
+                                                    {
+                                                        point3f physics:centerOfMass = (0.0000636239, -0.000045883, 0.0230003)
+                                                        float3 physics:diagonalInertia = (1.31021e-7, 1.30941e-7, 1.36149e-9)
+                                                        float physics:mass = 0.000497227
+                                                        quatf physics:principalAxes = (0.9255004, -0.0005108832, 0.0012686906, -0.37874418)
+
+                                                        over "left_eye_yaw_02_A_cord" (
+                                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                        )
+                                                        {
+                                                            point3f physics:centerOfMass = (-1.15168e-8, -2.5394e-8, -0.0000302157)
+                                                            float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                            float physics:mass = 0.0000362893
+                                                            quatf physics:principalAxes = (-0.18634605, 0.6822222, 0.18640906, 0.68198216)
+
+                                                            over "left_eye_yaw_02_A01_cord" (
+                                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                            )
+                                                            {
+                                                                point3f physics:centerOfMass = (0.0000561118, -0.00905449, 0.00394561)
+                                                                float3 physics:diagonalInertia = (7.92866e-9, 6.92184e-9, 1.72631e-9)
+                                                                float physics:mass = 0.000275542
+                                                                quatf physics:principalAxes = (0.5201499, 0.47888687, -0.4757959, 0.52319187)
+
+                                                                over "left_eye_yaw_02_B_cord" (
+                                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                                )
+                                                                {
+                                                                    point3f physics:centerOfMass = (-0.00585874, 0.00000231992, 0.0104289)
+                                                                    float3 physics:diagonalInertia = (4.19669e-7, 2.85191e-7, 2.31033e-7)
+                                                                    float physics:mass = 0.0030617
+                                                                    quatf physics:principalAxes = (0.70682865, 0.028468886, 0.028628588, 0.70623165)
+
+                                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                    {
+                                                                        custom rel physics:body0
+                                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link/left_eye_yaw_02_A_cord/left_eye_yaw_02_A01_cord>
+                                                                        custom rel physics:body1
+                                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link/left_eye_yaw_02_A_cord/left_eye_yaw_02_A01_cord/left_eye_yaw_02_B_cord>
+                                                                        point3f physics:localPos0 = (0.000072906, -0.0117, 0.0074943)
+                                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                    }
+                                                                }
+
+                                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                {
+                                                                    custom rel physics:body0
+                                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link/left_eye_yaw_02_A_cord>
+                                                                    custom rel physics:body1
+                                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link/left_eye_yaw_02_A_cord/left_eye_yaw_02_A01_cord>
+                                                                    point3f physics:localPos0 = (0, -3.469447e-18, 1.110223e-16)
+                                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                }
+                                                            }
+
+                                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                            {
+                                                                custom rel physics:body0
+                                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link>
+                                                                custom rel physics:body1
+                                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link/left_eye_yaw_02_A_cord>
+                                                                point3f physics:localPos0 = (0.000171, -0.000045536, 0.046)
+                                                                point3f physics:localPos1 = (0, 0, 0)
+                                                                quatf physics:localRot0 = (0.7062238, 6.4838273e-9, 0.7079887, 6.4838273e-9)
+                                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                                            }
+                                                        }
+
+                                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                        {
+                                                            custom rel physics:body0
+                                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link>
+                                                            custom rel physics:body1
+                                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link/left_eye_yaw_02_Link>
+                                                            point3f physics:localPos0 = (-1.110223e-16, 0, -1.3877788e-17)
+                                                            point3f physics:localPos1 = (0, 0, 0)
+                                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                                        }
+                                                    }
+
+                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                    {
+                                                        custom rel physics:body0
+                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link>
+                                                        custom rel physics:body1
+                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link/left_eye_pitch_02_Link>
+                                                        point3f physics:localPos0 = (-0.000214552, -0.025704, 0)
+                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                        quatf physics:localRot0 = (0.70624125, 0.000013998606, -0.7079713, -0.000013964405)
+                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                    }
+                                                }
+
+                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                {
+                                                    custom rel physics:body0
+                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link>
+                                                    custom rel physics:body1
+                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link/left_eye_yaw_Link>
+                                                    point3f physics:localPos0 = (0, 0, 0)
+                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                }
+                                            }
+
+                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                            {
+                                                custom rel physics:body0
+                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link>
+                                                custom rel physics:body1
+                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/left_eye_pich_Link>
+                                                point3f physics:localPos0 = (0.0855694, 0.0556563, -0.00652786)
+                                                point3f physics:localPos1 = (0, 0, 0)
+                                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                            }
+                                        }
+
+                                        over "right_eye_pich_Link" (
+                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                        )
+                                        {
+                                            point3f physics:centerOfMass = (-0.013691, -0.00002512, 0.0033484)
+                                            float3 physics:diagonalInertia = (0.00000147872, 0.0000010945, 0.00000102698)
+                                            float physics:mass = 0.015029
+                                            quatf physics:principalAxes = (0.504733, 0.496877, 0.503711, 0.494604)
+
+                                            over "right_eye_yaw_Link" (
+                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                            )
+                                            {
+                                                point3f physics:centerOfMass = (0.0122411, -0.0000426867, 0.000446727)
+                                                float3 physics:diagonalInertia = (0.0000161187, 0.0000102093, 0.00000943422)
+                                                float physics:mass = 0.041235
+                                                quatf physics:principalAxes = (0.9999765, 0.006689544, 0.0015085208, 0.00006633133)
+
+                                                over "right_eye_yaw_01_Link" (
+                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                )
+                                                {
+                                                    point3f physics:centerOfMass = (3.02935e-7, -7.75742e-8, 0.0000302166)
+                                                    float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                    float physics:mass = 0.0000362893
+                                                    quatf physics:principalAxes = (-0.00066568627, 0.7061113, 0.00057168625, 0.7081003)
+
+                                                    over "right_eye_pitch_01_Link" (
+                                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                    )
+                                                    {
+                                                        point3f physics:centerOfMass = (-0.0379997, 0.0000148765, 0.000052967)
+                                                        float3 physics:diagonalInertia = (4.77591e-7, 4.76955e-7, 1.48213e-9)
+                                                        float physics:mass = 0.000644525
+                                                        quatf physics:principalAxes = (0.020097205, 0.70689815, 0.019812606, 0.7067522)
+
+                                                        over "right_eye_yaw_01_A_cord" (
+                                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                        )
+                                                        {
+                                                            point3f physics:centerOfMass = (-1.4818e-8, -1.72037e-8, 0.000030219)
+                                                            float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                            float physics:mass = 0.0000362893
+                                                            quatf physics:principalAxes = (0.04691981, 0.7055412, -0.04698631, 0.7055512)
+
+                                                            over "right_eye_yaw_01_A01_cord" (
+                                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                            )
+                                                            {
+                                                                point3f physics:centerOfMass = (0.0000882307, 0.0090542, 0.00394565)
+                                                                float3 physics:diagonalInertia = (7.92872e-9, 6.92191e-9, 1.7263e-9)
+                                                                float physics:mass = 0.000275542
+                                                                quatf physics:principalAxes = (0.47972202, 0.51920104, -0.52413607, 0.47495103)
+
+                                                                over "right_eye_yaw_01_B_cord" (
+                                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                                )
+                                                                {
+                                                                    point3f physics:centerOfMass = (-0.00000758289, -0.00586069, 0.0104278)
+                                                                    float3 physics:diagonalInertia = (4.19667e-7, 2.85189e-7, 2.31032e-7)
+                                                                    float physics:mass = 0.00306168
+                                                                    quatf physics:principalAxes = (0.9991882, -0.040280107, 0.00027416207, -0.00062836014)
+
+                                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                    {
+                                                                        custom rel physics:body0
+                                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link/right_eye_yaw_01_A_cord/right_eye_yaw_01_A01_cord>
+                                                                        custom rel physics:body1
+                                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link/right_eye_yaw_01_A_cord/right_eye_yaw_01_A01_cord/right_eye_yaw_01_B_cord>
+                                                                        point3f physics:localPos0 = (0.00011429, 0.0117, 0.0074943)
+                                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                    }
+                                                                }
+
+                                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                {
+                                                                    custom rel physics:body0
+                                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link/right_eye_yaw_01_A_cord>
+                                                                    custom rel physics:body1
+                                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link/right_eye_yaw_01_A_cord/right_eye_yaw_01_A01_cord>
+                                                                    point3f physics:localPos0 = (0, 0, 0)
+                                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                }
+                                                            }
+
+                                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                            {
+                                                                custom rel physics:body0
+                                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link>
+                                                                custom rel physics:body1
+                                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link/right_eye_yaw_01_A_cord>
+                                                                point3f physics:localPos0 = (-0.076, 0.000029748, 0.000014921)
+                                                                point3f physics:localPos1 = (0, 0, 0)
+                                                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                                            }
+                                                        }
+
+                                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                        {
+                                                            custom rel physics:body0
+                                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link>
+                                                            custom rel physics:body1
+                                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link/right_eye_pitch_01_Link>
+                                                            point3f physics:localPos0 = (0, 0, 0)
+                                                            point3f physics:localPos1 = (0, 0, 0)
+                                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                                        }
+                                                    }
+
+                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                    {
+                                                        custom rel physics:body0
+                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link>
+                                                        custom rel physics:body1
+                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_yaw_01_Link>
+                                                        point3f physics:localPos0 = (-0.0000643209, 0, 0.026292)
+                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                    }
+                                                }
+
+                                                over "right_eye_pitch_02_Link" (
+                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                )
+                                                {
+                                                    point3f physics:centerOfMass = (-2.58489e-8, 0.0000302148, 2.42568e-7)
+                                                    float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                    float physics:mass = 0.0000362893
+                                                    quatf physics:principalAxes = (0.6970419, 0.118417986, 0.11269698, 0.69814694)
+
+                                                    over "right_eye_yaw_02_Link" (
+                                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                    )
+                                                    {
+                                                        point3f physics:centerOfMass = (0.0000636239, 0.000045883, 0.0230003)
+                                                        float3 physics:diagonalInertia = (1.31021e-7, 1.30941e-7, 1.36149e-9)
+                                                        float physics:mass = 0.000497227
+                                                        quatf physics:principalAxes = (0.9255004, 0.00051088224, 0.0012686906, 0.37874418)
+
+                                                        over "right_eye_yaw_02_A_cord" (
+                                                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                        )
+                                                        {
+                                                            point3f physics:centerOfMass = (-1.15136e-8, 2.54013e-8, -0.0000302157)
+                                                            float3 physics:diagonalInertia = (9.23351e-11, 8.2859e-11, 8.273e-11)
+                                                            float physics:mass = 0.0000362893
+                                                            quatf physics:principalAxes = (0.18634605, 0.6822222, -0.18640906, 0.68198216)
+
+                                                            over "right_eye_yaw_02_A01_cord" (
+                                                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                            )
+                                                            {
+                                                                point3f physics:centerOfMass = (0.0000561118, 0.00905449, 0.00394561)
+                                                                float3 physics:diagonalInertia = (7.92866e-9, 6.92184e-9, 1.72631e-9)
+                                                                float physics:mass = 0.000275542
+                                                                quatf physics:principalAxes = (0.47888687, 0.5201499, -0.52319187, 0.4757959)
+
+                                                                over "right_eye_yaw_02_B_cord" (
+                                                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                                                )
+                                                                {
+                                                                    point3f physics:centerOfMass = (-0.00585874, -0.00000231971, 0.0104289)
+                                                                    float3 physics:diagonalInertia = (4.19669e-7, 2.85191e-7, 2.31033e-7)
+                                                                    float physics:mass = 0.0030617
+                                                                    quatf physics:principalAxes = (0.70623165, 0.028628588, 0.028468788, 0.70682865)
+
+                                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                    {
+                                                                        custom rel physics:body0
+                                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link/right_eye_yaw_02_A_cord/right_eye_yaw_02_A01_cord>
+                                                                        custom rel physics:body1
+                                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link/right_eye_yaw_02_A_cord/right_eye_yaw_02_A01_cord/right_eye_yaw_02_B_cord>
+                                                                        point3f physics:localPos0 = (0.000072906, 0.0117, 0.0074943)
+                                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                    }
+                                                                }
+
+                                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                                {
+                                                                    custom rel physics:body0
+                                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link/right_eye_yaw_02_A_cord>
+                                                                    custom rel physics:body1
+                                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link/right_eye_yaw_02_A_cord/right_eye_yaw_02_A01_cord>
+                                                                    point3f physics:localPos0 = (0, 3.469447e-18, 1.110223e-16)
+                                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                                }
+                                                            }
+
+                                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                            {
+                                                                custom rel physics:body0
+                                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link>
+                                                                custom rel physics:body1
+                                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link/right_eye_yaw_02_A_cord>
+                                                                point3f physics:localPos0 = (0.000171, 0.000045536, 0.046)
+                                                                point3f physics:localPos1 = (0, 0, 0)
+                                                                quatf physics:localRot0 = (0.7062238, -6.4838273e-9, 0.7079887, -6.4838273e-9)
+                                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                                            }
+                                                        }
+
+                                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                        {
+                                                            custom rel physics:body0
+                                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link>
+                                                            custom rel physics:body1
+                                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link/right_eye_yaw_02_Link>
+                                                            point3f physics:localPos0 = (-1.110223e-16, 0, -1.3877788e-17)
+                                                            point3f physics:localPos1 = (0, 0, 0)
+                                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                                        }
+                                                    }
+
+                                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                    {
+                                                        custom rel physics:body0
+                                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link>
+                                                        custom rel physics:body1
+                                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link/right_eye_pitch_02_Link>
+                                                        point3f physics:localPos0 = (-0.000214552, 0.025704, 0)
+                                                        point3f physics:localPos1 = (0, 0, 0)
+                                                        quatf physics:localRot0 = (0.70624125, -0.000013998606, -0.7079713, 0.000013964405)
+                                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                                    }
+                                                }
+
+                                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                                {
+                                                    custom rel physics:body0
+                                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link>
+                                                    custom rel physics:body1
+                                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link/right_eye_yaw_Link>
+                                                    point3f physics:localPos0 = (0, 0, 0)
+                                                    point3f physics:localPos1 = (0, 0, 0)
+                                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                                }
+                                            }
+
+                                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                                            {
+                                                custom rel physics:body0
+                                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link>
+                                                custom rel physics:body1
+                                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link/right_eye_pich_Link>
+                                                point3f physics:localPos0 = (0.0855694, -0.0556563, -0.00652786)
+                                                point3f physics:localPos1 = (0, 0, 0)
+                                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                            }
+                                        }
+
+                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                        {
+                                            custom rel physics:body0
+                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link>
+                                            custom rel physics:body1
+                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link/head_yaw_Link>
+                                            point3f physics:localPos0 = (-0.00501052, 0, 0.0739601)
+                                            point3f physics:localPos1 = (0, 0, 0)
+                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                        }
+                                    }
+
+                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                    {
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link/head_pitch_Link>
+                                        point3f physics:localPos0 = (0, 0, 0)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                    }
+                                }
+
+                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                {
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/head_roll_Link>
+                                    point3f physics:localPos0 = (0.00910235, 0, 0.147846)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                }
+                            }
+
+                            over "base_re_01_Link" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (0.000168656, 0.000186232, 5.24448e-10)
+                                float3 physics:diagonalInertia = (0.00000251304, 0.00000193621, 9.41314e-7)
+                                float physics:mass = 0.200877
+                                quatf physics:principalAxes = (0.7052793, 0.7052793, -0.050804723, -0.05080512)
+
+                                over "base_connect_01_roll_Link" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (0, 0, 0)
+                                    float3 physics:diagonalInertia = (8.01377e-9, 6.01639e-9, 6.01639e-9)
+                                    float physics:mass = 0.0004852
+                                    quatf physics:principalAxes = (1, 0, 0, 0)
+
+                                    over "base_connect_01_pitch_Link" (
+                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                    )
+                                    {
+                                        point3f physics:centerOfMass = (0.00331585, -0.00452181, 0.0659682)
+                                        float3 physics:diagonalInertia = (0.00000169047, 0.00000169021, 9.82862e-8)
+                                        float physics:mass = 0.00594926
+                                        quatf physics:principalAxes = (0.91244173, 0.038921583, 0.012977895, 0.40714484)
+
+                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                        {
+                                            custom rel physics:body0
+                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_01_Link/base_connect_01_roll_Link>
+                                            custom rel physics:body1
+                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_01_Link/base_connect_01_roll_Link/base_connect_01_pitch_Link>
+                                            point3f physics:localPos0 = (0, -3.469447e-18, 0)
+                                            point3f physics:localPos1 = (0, 0, 0)
+                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                        }
+                                    }
+
+                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                    {
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_01_Link>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_01_Link/base_connect_01_roll_Link>
+                                        point3f physics:localPos0 = (0.015, 0.03, 0)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                    }
+                                }
+
+                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                {
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_01_Link>
+                                    point3f physics:localPos0 = (0.016102, 0, 0.040346)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                }
+                            }
+
+                            over "base_re_02_Link" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (0.000168605, -0.000186229, 2.56569e-11)
+                                float3 physics:diagonalInertia = (0.00000251336, 0.0000019364, 9.41507e-7)
+                                float physics:mass = 0.200881
+                                quatf physics:principalAxes = (0.7052796, 0.7052796, 0.05080127, 0.05080117)
+
+                                over "base_connect_02_Link" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (0, 0, 0)
+                                    float3 physics:diagonalInertia = (8.01377e-9, 6.01639e-9, 6.01639e-9)
+                                    float physics:mass = 0.0004852
+                                    quatf physics:principalAxes = (1, 0, 0, 0)
+
+                                    over "base_connect_02_pitch_Link" (
+                                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                    )
+                                    {
+                                        point3f physics:centerOfMass = (0.00351011, 0.0040095, 0.0428471)
+                                        float3 physics:diagonalInertia = (7.08613e-7, 7.07496e-7, 9.57934e-8)
+                                        float physics:mass = 0.00515269
+                                        quatf physics:principalAxes = (0.92301327, -0.058516618, 0.019961806, -0.37976813)
+
+                                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                                        {
+                                            custom rel physics:body0
+                                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_02_Link/base_connect_02_Link>
+                                            custom rel physics:body1
+                                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_02_Link/base_connect_02_Link/base_connect_02_pitch_Link>
+                                            point3f physics:localPos0 = (0, 3.469447e-18, 0)
+                                            point3f physics:localPos1 = (0, 0, 0)
+                                            quatf physics:localRot0 = (1, 0, 0, 0)
+                                            quatf physics:localRot1 = (1, 0, 0, 0)
+                                        }
+                                    }
+
+                                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                                    {
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_02_Link>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_02_Link/base_connect_02_Link>
+                                        point3f physics:localPos0 = (0.015, -0.03, -1.110223e-16)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                    }
+                                }
+
+                                def PhysicsFixedJoint "PhysicsFixedJoint"
+                                {
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link/base_re_02_Link>
+                                    point3f physics:localPos0 = (0.016102, 0, 0.086846)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                }
+                            }
+
+                            def PhysicsFixedJoint "PhysicsFixedJoint"
+                            {
+                                custom rel physics:body0
+                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso>
+                                custom rel physics:body1
+                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso/base_link>
+                                point3f physics:localPos0 = (-0.0056, 0, 0.0285)
+                                point3f physics:localPos1 = (0, 0, 0)
+                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                quatf physics:localRot1 = (1, 0, 0, 0)
+                            }
+                        }
+
+                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                        {
+                            custom rel physics:body0
+                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch>
+                            custom rel physics:body1
+                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch/link_torso>
+                            point3f physics:localPos0 = (0, 0, 0)
+                            point3f physics:localPos1 = (0, 0, 0)
+                            quatf physics:localRot0 = (1, 0, 0, 0)
+                            quatf physics:localRot1 = (1, 0, 0, 0)
+                        }
+                    }
+
+                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                    {
+                        custom rel physics:body0
+                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw>
+                        custom rel physics:body1
+                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_pelvisPitch>
+                        point3f physics:localPos0 = (0, 0, 0)
+                        point3f physics:localPos1 = (0, 0, 0)
+                        quatf physics:localRot0 = (0.99998754, 0, 0.0049914513, 0)
+                        quatf physics:localRot1 = (1, 0, 0, 0)
+                    }
+                }
+
+                over "link_rLinearOut" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, -0.014057)
+                    float3 physics:diagonalInertia = (0.0000023, 0.0000023, 1e-7)
+                    float physics:mass = 0.011178
+                    quatf physics:principalAxes = (1, 0, 0, 0)
+
+                    over "link_rLinear" (
+                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                    )
+                    {
+                        point3f physics:centerOfMass = (0, 0.0000018734, -0.084052)
+                        float3 physics:diagonalInertia = (0.00010864, 0.00010856, 0.000025022)
+                        float physics:mass = 0.206
+                        quatf physics:principalAxes = (0.7071068, 0, 0, 0.7071068)
+
+                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                        {
+                            custom rel physics:body0
+                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_rLinearOut>
+                            custom rel physics:body1
+                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_rLinearOut/link_rLinear>
+                            point3f physics:localPos0 = (0, 0, 0)
+                            point3f physics:localPos1 = (0, 0, 0)
+                            quatf physics:localRot0 = (1, 0, 0, 0)
+                            quatf physics:localRot1 = (1, 0, 0, 0)
+                        }
+                    }
+
+                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                    {
+                        custom rel physics:body0
+                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw>
+                        custom rel physics:body1
+                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_rLinearOut>
+                        point3f physics:localPos0 = (0.01, -0.05775, -0.045)
+                        point3f physics:localPos1 = (0, 0, 0)
+                        quatf physics:localRot0 = (-0.04440259, 0, 0.9990137, 0)
+                        quatf physics:localRot1 = (1, 0, 0, 0)
+                    }
+                }
+
+                over "link_lLinearOut" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, -0.014057)
+                    float3 physics:diagonalInertia = (0.0000023, 0.0000023, 1e-7)
+                    float physics:mass = 0.011178
+                    quatf physics:principalAxes = (1, 0, 0, 0)
+
+                    over "link_lLinear" (
+                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                    )
+                    {
+                        point3f physics:centerOfMass = (0, 0.0000018734, -0.084052)
+                        float3 physics:diagonalInertia = (0.00010864, 0.00010856, 0.000025022)
+                        float physics:mass = 0.206
+                        quatf physics:principalAxes = (0.7071068, 0, 0, 0.7071068)
+
+                        def PhysicsFixedJoint "PhysicsFixedJoint"
+                        {
+                            custom rel physics:body0
+                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_lLinearOut>
+                            custom rel physics:body1
+                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_lLinearOut/link_lLinear>
+                            point3f physics:localPos0 = (0, 0, 0)
+                            point3f physics:localPos1 = (0, 0, 0)
+                            quatf physics:localRot0 = (1, 0, 0, 0)
+                            quatf physics:localRot1 = (1, 0, 0, 0)
+                        }
+                    }
+
+                    def PhysicsFixedJoint "PhysicsFixedJoint"
+                    {
+                        custom rel physics:body0
+                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw>
+                        custom rel physics:body1
+                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw/link_lLinearOut>
+                        point3f physics:localPos0 = (0.01, 0.05775, -0.045)
+                        point3f physics:localPos1 = (0, 0, 0)
+                        quatf physics:localRot0 = (-0.04440259, 0, 0.9990137, 0)
+                        quatf physics:localRot1 = (1, 0, 0, 0)
+                    }
+                }
+
+                def PhysicsFixedJoint "PhysicsFixedJoint"
+                {
+                    custom rel physics:body0
+                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis>
+                    custom rel physics:body1
+                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/link_pelvisYaw>
+                    point3f physics:localPos0 = (0, 0, 0)
+                    point3f physics:localPos1 = (0, 0, 0)
+                    quatf physics:localRot0 = (1, 0, 0, 0)
+                    quatf physics:localRot1 = (1, 0, 0, 0)
+                }
+            }
+
+            over "leg_base_link" (
+                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+            )
+            {
+                point3f physics:centerOfMass = (-0.000073, 0.0000348, -0.0013834)
+                float3 physics:diagonalInertia = (0.00280904, 0.00265408, 0.000679524)
+                float physics:mass = 1.1384
+                quatf physics:principalAxes = (0.054778103, 0.70488304, -0.056819405, 0.70491904)
+
+                over "imu" (
+                    prepend apiSchemas = ["NewtonSiteAPI"]
+                )
+                {
+                }
+
+                over "right_hip_pitch_link" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (-0.00026298, -0.046155, 0.00007816)
+                    float3 physics:diagonalInertia = (0.000411626, 0.000378311, 0.000238843)
+                    float physics:mass = 0.52677
+                    quatf physics:principalAxes = (0.5238338, 0.4668908, -0.52796185, 0.47840083)
+
+                    over "right_hip_roll_link" (
+                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                    )
+                    {
+                        point3f physics:centerOfMass = (-0.033865, -0.00007437, -0.0694411)
+                        float3 physics:diagonalInertia = (0.000362864, 0.000337948, 0.000212467)
+                        float physics:mass = 0.464352
+                        quatf physics:principalAxes = (0.6966418, 0.12736797, 0.13152798, 0.6936628)
+
+                        over "right_hip_yaw_link" (
+                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                        )
+                        {
+                            point3f physics:centerOfMass = (0, -0.0106576, -0.00657649)
+                            float3 physics:diagonalInertia = (0.0000984547, 0.00009292, 0.0000367553)
+                            float physics:mass = 0.10492
+                            quatf physics:principalAxes = (0.300883, 0.639898, -0.639898, 0.300883)
+
+                            over "right_calf_link" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (0.00000592, 0.029092, -0.0816358)
+                                float3 physics:diagonalInertia = (0.00795171, 0.00789318, 0.000529789)
+                                float physics:mass = 1.01441
+                                quatf physics:principalAxes = (0.70482975, -0.039738685, 0.039723184, 0.7071478)
+
+                                over "right_wheel_link" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (0, 0.00055636, 0)
+                                    float3 physics:diagonalInertia = (0.00196204, 0.00109695, 0.00109695)
+                                    float physics:mass = 0.48758
+                                    quatf physics:principalAxes = (0.7071068, 0, 0, 0.7071068)
+
+                                    over "right_wheel_ground" (
+                                        prepend apiSchemas = ["NewtonSiteAPI"]
+                                    )
+                                    {
+                                    }
+
+                                    def PhysicsRevoluteJoint "right_wheel_joint" (
+                                        prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    )
+                                    {
+                                        float newton:armature = 0.01
+                                        uniform token physics:axis = "Y"
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link/right_hip_yaw_link/right_calf_link>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link/right_hip_yaw_link/right_calf_link/right_wheel_link>
+                                        point3f physics:localPos0 = (0, 0.043, -0.175)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                    }
+                                }
+
+                                def PhysicsRevoluteJoint "right_calf_joint" (
+                                    prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                )
+                                {
+                                    float newton:armature = 0.01
+                                    uniform token physics:axis = "Y"
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link/right_hip_yaw_link>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link/right_hip_yaw_link/right_calf_link>
+                                    point3f physics:localPos0 = (0, -0.043, -0.044)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                    float physics:lowerLimit = 0
+                                    float physics:upperLimit = 90.00021
+                                }
+                            }
+
+                            def PhysicsRevoluteJoint "right_hip_yaw_joint" (
+                                prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                            )
+                            {
+                                float newton:armature = 0.01
+                                uniform token physics:axis = "Z"
+                                custom rel physics:body0
+                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link>
+                                custom rel physics:body1
+                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link/right_hip_yaw_link>
+                                point3f physics:localPos0 = (-0.0375, 0, -0.119)
+                                point3f physics:localPos1 = (0, 0, 0)
+                                quatf physics:localRot0 = (0, -1, 0, 0)
+                                quatf physics:localRot1 = (0, -1, 0, 0)
+                                float physics:lowerLimit = -134.98886
+                                float physics:upperLimit = 134.98886
+                            }
+                        }
+
+                        def PhysicsRevoluteJoint "right_hip_roll_joint" (
+                            prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                        )
+                        {
+                            float newton:armature = 0.01
+                            uniform token physics:axis = "X"
+                            custom rel physics:body0
+                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link>
+                            custom rel physics:body1
+                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link/right_hip_roll_link>
+                            point3f physics:localPos0 = (0.0375, -0.056, 0)
+                            point3f physics:localPos1 = (0, 0, 0)
+                            quatf physics:localRot0 = (0, 0, -1, 0)
+                            quatf physics:localRot1 = (0, 0, -1, 0)
+                            float physics:lowerLimit = -9.998114
+                            float physics:upperLimit = 60.00014
+                        }
+                    }
+
+                    def PhysicsRevoluteJoint "right_hip_pitch_joint" (
+                        prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                    )
+                    {
+                        float newton:armature = 0.01
+                        uniform token physics:axis = "Y"
+                        custom rel physics:body0
+                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link>
+                        custom rel physics:body1
+                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/right_hip_pitch_link>
+                        point3f physics:localPos0 = (0, -0.03, -0.0069101)
+                        point3f physics:localPos1 = (0, 0, 0)
+                        quatf physics:localRot0 = (1, 0, 0, 0)
+                        quatf physics:localRot1 = (1, 0, 0, 0)
+                        float physics:lowerLimit = -90.00021
+                        float physics:upperLimit = 90.00021
+                    }
+                }
+
+                over "left_hip_pitch_link" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (-0.00026296, 0.039655, 0.00007817)
+                    float3 physics:diagonalInertia = (0.000411626, 0.000378311, 0.000238843)
+                    float physics:mass = 0.526774
+                    quatf physics:principalAxes = (0.46689087, 0.5238339, -0.4784009, 0.5279619)
+
+                    over "left_hip_roll_link" (
+                        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                    )
+                    {
+                        point3f physics:centerOfMass = (-0.033865, 0.00007436, -0.0694411)
+                        float3 physics:diagonalInertia = (0.000362864, 0.000337948, 0.000212467)
+                        float physics:mass = 0.464351
+                        quatf physics:principalAxes = (0.6936628, 0.13152798, 0.12736797, 0.6966418)
+
+                        over "left_hip_yaw_link" (
+                            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                        )
+                        {
+                            point3f physics:centerOfMass = (0, 0.0106576, -0.00657649)
+                            float3 physics:diagonalInertia = (0.0000984547, 0.00009292, 0.0000367553)
+                            float physics:mass = 0.111576
+                            quatf physics:principalAxes = (0.639898, 0.300883, -0.300883, 0.639898)
+
+                            over "left_calf_link" (
+                                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                            )
+                            {
+                                point3f physics:centerOfMass = (0.00000592, -0.0290919, -0.0816359)
+                                float3 physics:diagonalInertia = (0.00795171, 0.00789318, 0.000529789)
+                                float physics:mass = 1.01441
+                                quatf physics:principalAxes = (0.7071478, 0.039723184, -0.039738685, 0.70482975)
+
+                                over "left_wheel_link" (
+                                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                                )
+                                {
+                                    point3f physics:centerOfMass = (0, -0.00055636, 0)
+                                    float3 physics:diagonalInertia = (0.00196204, 0.00109695, 0.00109695)
+                                    float physics:mass = 0.48758
+                                    quatf physics:principalAxes = (0.7071068, 0, 0, 0.7071068)
+
+                                    over "left_wheel_ground" (
+                                        prepend apiSchemas = ["NewtonSiteAPI"]
+                                    )
+                                    {
+                                    }
+
+                                    def PhysicsRevoluteJoint "left_wheel_joint" (
+                                        prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    )
+                                    {
+                                        float newton:armature = 0.01
+                                        uniform token physics:axis = "Y"
+                                        custom rel physics:body0
+                                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link/left_hip_yaw_link/left_calf_link>
+                                        custom rel physics:body1
+                                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link/left_hip_yaw_link/left_calf_link/left_wheel_link>
+                                        point3f physics:localPos0 = (0, -0.043, -0.175)
+                                        point3f physics:localPos1 = (0, 0, 0)
+                                        quatf physics:localRot0 = (1, 0, 0, 0)
+                                        quatf physics:localRot1 = (1, 0, 0, 0)
+                                    }
+                                }
+
+                                def PhysicsRevoluteJoint "left_calf_joint" (
+                                    prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                )
+                                {
+                                    float newton:armature = 0.01
+                                    uniform token physics:axis = "Y"
+                                    custom rel physics:body0
+                                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link/left_hip_yaw_link>
+                                    custom rel physics:body1
+                                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link/left_hip_yaw_link/left_calf_link>
+                                    point3f physics:localPos0 = (0, 0.043, -0.044)
+                                    point3f physics:localPos1 = (0, 0, 0)
+                                    quatf physics:localRot0 = (1, 0, 0, 0)
+                                    quatf physics:localRot1 = (1, 0, 0, 0)
+                                    float physics:lowerLimit = 0
+                                    float physics:upperLimit = 90.00021
+                                }
+                            }
+
+                            def PhysicsRevoluteJoint "left_hip_yaw_joint" (
+                                prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                            )
+                            {
+                                float newton:armature = 0.01
+                                uniform token physics:axis = "Z"
+                                custom rel physics:body0
+                                append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link>
+                                custom rel physics:body1
+                                append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link/left_hip_yaw_link>
+                                point3f physics:localPos0 = (-0.0375, 0, -0.119)
+                                point3f physics:localPos1 = (0, 0, 0)
+                                quatf physics:localRot0 = (1, 0, 0, 0)
+                                quatf physics:localRot1 = (1, 0, 0, 0)
+                                float physics:lowerLimit = -134.98886
+                                float physics:upperLimit = 134.98886
+                            }
+                        }
+
+                        def PhysicsRevoluteJoint "left_hip_roll_joint" (
+                            prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                        )
+                        {
+                            float newton:armature = 0.01
+                            uniform token physics:axis = "X"
+                            custom rel physics:body0
+                            append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link>
+                            custom rel physics:body1
+                            append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link/left_hip_roll_link>
+                            point3f physics:localPos0 = (0.0375, 0.056, 0)
+                            point3f physics:localPos1 = (0, 0, 0)
+                            quatf physics:localRot0 = (1, 0, 0, 0)
+                            quatf physics:localRot1 = (1, 0, 0, 0)
+                            float physics:lowerLimit = -9.998114
+                            float physics:upperLimit = 60.00014
+                        }
+                    }
+
+                    def PhysicsRevoluteJoint "left_hip_pitch_joint" (
+                        prepend apiSchemas = ["NewtonJointAPI", "PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                    )
+                    {
+                        float newton:armature = 0.01
+                        uniform token physics:axis = "Y"
+                        custom rel physics:body0
+                        append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link>
+                        custom rel physics:body1
+                        append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link/left_hip_pitch_link>
+                        point3f physics:localPos0 = (0, 0.03, -0.0069101)
+                        point3f physics:localPos1 = (0, 0, 0)
+                        quatf physics:localRot0 = (1, 0, 0, 0)
+                        quatf physics:localRot1 = (1, 0, 0, 0)
+                        float physics:lowerLimit = -90.00021
+                        float physics:upperLimit = 90.00021
+                    }
+                }
+
+                def PhysicsFixedJoint "PhysicsFixedJoint"
+                {
+                    custom rel physics:body0
+                    append rel physics:body0 = </nemov3_sim_hw/Geometry/link_leg2pelvis>
+                    custom rel physics:body1
+                    append rel physics:body1 = </nemov3_sim_hw/Geometry/link_leg2pelvis/leg_base_link>
+                    point3f physics:localPos0 = (0, 0, -0.09)
+                    point3f physics:localPos1 = (0, 0, 0)
+                    quatf physics:localRot0 = (1, 0, 0, 0)
+                    quatf physics:localRot1 = (1, 0, 0, 0)
+                }
+            }
+        }
+    }
+
+    over "Physics"
+    {
+        over "PhysicsMaterial" (
+            prepend apiSchemas = ["PhysicsMaterialAPI", "NewtonMaterialAPI"]
+        )
+        {
+            float newton:contactDamping = 100
+            float newton:contactStiffness = 2500
+            float newton:rollingFriction = 0.0001
+            float newton:torsionalFriction = 0.005
+            float physics:dynamicFriction = 1
+            float physics:staticFriction = 1
+        }
+    }
+}
+
+def PhysicsScene "PhysicsScene" (
+    prepend apiSchemas = ["NewtonSceneAPI"]
+)
+{
+    uniform int newton:maxSolverIterations = 100
+    uniform int newton:timeStepsPerSecond = 500
+    vector3f physics:gravityDirection = (0, 0, -1)
+    float physics:gravityMagnitude = 9.81
+}
+

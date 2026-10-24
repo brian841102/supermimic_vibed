@@ -1,0 +1,277 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "MuJoCo USD Converter v0.6.1"
+    }
+    defaultPrim = "nemov3_sim_hw"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    subLayers = [
+        @./physics.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "nemov3_sim_hw"
+{
+    over "Geometry"
+    {
+        over "link_leg2pelvis"
+        {
+            over "link_pelvisYaw"
+            {
+                over "link_pelvisPitch"
+                {
+                    over "link_torso"
+                    {
+                        over "payload_box_visual" (
+                            prepend apiSchemas = ["MjcImageableAPI"]
+                        )
+                        {
+                            uniform int mjc:group = 1
+                        }
+
+                        over "payload_box_collision" (
+                            prepend apiSchemas = ["MjcCollisionAPI"]
+                        )
+                        {
+                            uniform int mjc:group = 1
+                            uniform double[] mjc:solref = [0.02, 1]
+                        }
+
+                        over "link_rShoulderPitch"
+                        {
+                            over "link_rShoulderRoll"
+                            {
+                                over "link_rShoulderYaw"
+                                {
+                                    over "link_rElbow"
+                                    {
+                                        over "link_rWristRoll"
+                                        {
+                                            over "joint_rWristRoll" (
+                                                delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                                prepend apiSchemas = ["MjcJointAPI"]
+                                            )
+                                            {
+                                            }
+                                        }
+
+                                        over "joint_rElbow" (
+                                            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                            prepend apiSchemas = ["MjcJointAPI"]
+                                        )
+                                        {
+                                        }
+                                    }
+
+                                    over "joint_rShoulderYaw" (
+                                        delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                        prepend apiSchemas = ["MjcJointAPI"]
+                                    )
+                                    {
+                                    }
+                                }
+
+                                over "joint_rShoulderRoll" (
+                                    delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    prepend apiSchemas = ["MjcJointAPI"]
+                                )
+                                {
+                                }
+                            }
+
+                            over "joint_rShoulderPitch" (
+                                delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                prepend apiSchemas = ["MjcJointAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "link_lShoulderPitch"
+                        {
+                            over "link_lShoulderRoll"
+                            {
+                                over "link_lShoulderYaw"
+                                {
+                                    over "link_lElbow"
+                                    {
+                                        over "link_lWristRoll"
+                                        {
+                                            over "joint_lWristRoll" (
+                                                delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                                prepend apiSchemas = ["MjcJointAPI"]
+                                            )
+                                            {
+                                            }
+                                        }
+
+                                        over "joint_lElbow" (
+                                            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                            prepend apiSchemas = ["MjcJointAPI"]
+                                        )
+                                        {
+                                        }
+                                    }
+
+                                    over "joint_lShoulderYaw" (
+                                        delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                        prepend apiSchemas = ["MjcJointAPI"]
+                                    )
+                                    {
+                                    }
+                                }
+
+                                over "joint_lShoulderRoll" (
+                                    delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    prepend apiSchemas = ["MjcJointAPI"]
+                                )
+                                {
+                                }
+                            }
+
+                            over "joint_lShoulderPitch" (
+                                delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                prepend apiSchemas = ["MjcJointAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "leg_base_link"
+            {
+                over "imu" (
+                    prepend apiSchemas = ["MjcSiteAPI"]
+                )
+                {
+                }
+
+                over "right_hip_pitch_link"
+                {
+                    over "right_hip_roll_link"
+                    {
+                        over "right_hip_yaw_link"
+                        {
+                            over "right_calf_link"
+                            {
+                                over "right_wheel_link"
+                                {
+                                    over "right_wheel_ground" (
+                                        prepend apiSchemas = ["MjcSiteAPI"]
+                                    )
+                                    {
+                                    }
+
+                                    over "right_wheel_joint" (
+                                        delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                        prepend apiSchemas = ["MjcJointAPI"]
+                                    )
+                                    {
+                                    }
+                                }
+
+                                over "right_calf_joint" (
+                                    delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    prepend apiSchemas = ["MjcJointAPI"]
+                                )
+                                {
+                                }
+                            }
+
+                            over "right_hip_yaw_joint" (
+                                delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                prepend apiSchemas = ["MjcJointAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "right_hip_roll_joint" (
+                            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                            prepend apiSchemas = ["MjcJointAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "right_hip_pitch_joint" (
+                        delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                        prepend apiSchemas = ["MjcJointAPI"]
+                    )
+                    {
+                    }
+                }
+
+                over "left_hip_pitch_link"
+                {
+                    over "left_hip_roll_link"
+                    {
+                        over "left_hip_yaw_link"
+                        {
+                            over "left_calf_link"
+                            {
+                                over "left_wheel_link"
+                                {
+                                    over "left_wheel_ground" (
+                                        prepend apiSchemas = ["MjcSiteAPI"]
+                                    )
+                                    {
+                                    }
+
+                                    over "left_wheel_joint" (
+                                        delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                        prepend apiSchemas = ["MjcJointAPI"]
+                                    )
+                                    {
+                                    }
+                                }
+
+                                over "left_calf_joint" (
+                                    delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                    prepend apiSchemas = ["MjcJointAPI"]
+                                )
+                                {
+                                }
+                            }
+
+                            over "left_hip_yaw_joint" (
+                                delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                                prepend apiSchemas = ["MjcJointAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "left_hip_roll_joint" (
+                            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                            prepend apiSchemas = ["MjcJointAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "left_hip_pitch_joint" (
+                        delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+                        prepend apiSchemas = ["MjcJointAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+        }
+    }
+}
+
+over "PhysicsScene" (
+    prepend apiSchemas = ["MjcSceneAPI"]
+)
+{
+    uniform token mjc:compiler:angle = "radian"
+    uniform token mjc:option:integrator = "implicitfast"
+    uniform token mjc:option:solver = "pgs"
+}
+

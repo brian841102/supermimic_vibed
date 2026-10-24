@@ -1,0 +1,1901 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "MuJoCo USD Converter v0.6.1"
+    }
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Scope "Instances"
+{
+    def Xform "link_leg2pelvis" (
+        prepend references = @./geometries.usd@</Geometries/link_leg2pelvis>
+    )
+    {
+        over "link_leg2pelvis" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_leg2pelvis_1" (
+        prepend references = @./geometries.usd@</Geometries/link_leg2pelvis_1>
+    )
+    {
+        over "link_leg2pelvis_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_pelvisYaw" (
+        prepend references = @./geometries.usd@</Geometries/link_pelvisYaw>
+    )
+    {
+        over "link_pelvisYaw" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_pelvisYaw_1" (
+        prepend references = @./geometries.usd@</Geometries/link_pelvisYaw_1>
+    )
+    {
+        over "link_pelvisYaw_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_pelvisPitch" (
+        prepend references = @./geometries.usd@</Geometries/link_pelvisPitch>
+    )
+    {
+        over "link_pelvisPitch" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_pelvisPitch_1" (
+        prepend references = @./geometries.usd@</Geometries/link_pelvisPitch_1>
+    )
+    {
+        over "link_pelvisPitch_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_torso" (
+        prepend references = @./geometries.usd@</Geometries/link_torso>
+    )
+    {
+        over "link_torso" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_torso_1" (
+        prepend references = @./geometries.usd@</Geometries/link_torso_1>
+    )
+    {
+        over "link_torso_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rShoulderPitch" (
+        prepend references = @./geometries.usd@</Geometries/link_rShoulderPitch>
+    )
+    {
+        over "link_rShoulderPitch" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rShoulderPitch_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rShoulderPitch_1>
+    )
+    {
+        over "link_rShoulderPitch_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rShoulderRoll" (
+        prepend references = @./geometries.usd@</Geometries/link_rShoulderRoll>
+    )
+    {
+        over "link_rShoulderRoll" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rShoulderRoll_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rShoulderRoll_1>
+    )
+    {
+        over "link_rShoulderRoll_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rShoulderYaw" (
+        prepend references = @./geometries.usd@</Geometries/link_rShoulderYaw>
+    )
+    {
+        over "link_rShoulderYaw" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rShoulderYaw_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rShoulderYaw_1>
+    )
+    {
+        over "link_rShoulderYaw_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rElbow" (
+        prepend references = @./geometries.usd@</Geometries/link_rElbow>
+    )
+    {
+        over "link_rElbow" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rElbow_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rElbow_1>
+    )
+    {
+        over "link_rElbow_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rWristRoll" (
+        prepend references = @./geometries.usd@</Geometries/link_rWristRoll>
+    )
+    {
+        over "link_rWristRoll" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rWristRoll_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rWristRoll_1>
+    )
+    {
+        over "link_rWristRoll_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rWristPitch" (
+        prepend references = @./geometries.usd@</Geometries/link_rWristPitch>
+    )
+    {
+        over "link_rWristPitch" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rWristPitch_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rWristPitch_1>
+    )
+    {
+        over "link_rWristPitch_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lShoulderPitch" (
+        prepend references = @./geometries.usd@</Geometries/link_lShoulderPitch>
+    )
+    {
+        over "link_lShoulderPitch" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lShoulderPitch_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lShoulderPitch_1>
+    )
+    {
+        over "link_lShoulderPitch_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lShoulderRoll" (
+        prepend references = @./geometries.usd@</Geometries/link_lShoulderRoll>
+    )
+    {
+        over "link_lShoulderRoll" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lShoulderRoll_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lShoulderRoll_1>
+    )
+    {
+        over "link_lShoulderRoll_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lShoulderYaw" (
+        prepend references = @./geometries.usd@</Geometries/link_lShoulderYaw>
+    )
+    {
+        over "link_lShoulderYaw" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lShoulderYaw_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lShoulderYaw_1>
+    )
+    {
+        over "link_lShoulderYaw_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lElbow" (
+        prepend references = @./geometries.usd@</Geometries/link_lElbow>
+    )
+    {
+        over "link_lElbow" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lElbow_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lElbow_1>
+    )
+    {
+        over "link_lElbow_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lWristRoll" (
+        prepend references = @./geometries.usd@</Geometries/link_lWristRoll>
+    )
+    {
+        over "link_lWristRoll" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lWristRoll_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lWristRoll_1>
+    )
+    {
+        over "link_lWristRoll_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lWristPitch" (
+        prepend references = @./geometries.usd@</Geometries/link_lWristPitch>
+    )
+    {
+        over "link_lWristPitch" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lWristPitch_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lWristPitch_1>
+    )
+    {
+        over "link_lWristPitch_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "base_link_part00" (
+        prepend references = @./geometries.usd@</Geometries/base_link_part00>
+    )
+    {
+        over "base_link_part00" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_link_part01" (
+        prepend references = @./geometries.usd@</Geometries/base_link_part01>
+    )
+    {
+        over "base_link_part01" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_link_part02" (
+        prepend references = @./geometries.usd@</Geometries/base_link_part02>
+    )
+    {
+        over "base_link_part02" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_link_part00_1" (
+        prepend references = @./geometries.usd@</Geometries/base_link_part00_1>
+    )
+    {
+        over "base_link_part00_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_link_part01_1" (
+        prepend references = @./geometries.usd@</Geometries/base_link_part01_1>
+    )
+    {
+        over "base_link_part01_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_link_part02_1" (
+        prepend references = @./geometries.usd@</Geometries/base_link_part02_1>
+    )
+    {
+        over "base_link_part02_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "head_roll_Link" (
+        prepend references = @./geometries.usd@</Geometries/head_roll_Link>
+    )
+    {
+        over "head_roll_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "head_roll_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/head_roll_Link_1>
+    )
+    {
+        over "head_roll_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "head_pitch_Link" (
+        prepend references = @./geometries.usd@</Geometries/head_pitch_Link>
+    )
+    {
+        over "head_pitch_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "head_pitch_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/head_pitch_Link_1>
+    )
+    {
+        over "head_pitch_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "head_support_Link" (
+        prepend references = @./geometries.usd@</Geometries/head_support_Link>
+    )
+    {
+        over "head_support_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "head_support_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/head_support_Link_1>
+    )
+    {
+        over "head_support_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_pich_Link" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_pich_Link>
+    )
+    {
+        over "left_eye_pich_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_pich_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_pich_Link_1>
+    )
+    {
+        over "left_eye_pich_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_Link" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_Link>
+    )
+    {
+        over "left_eye_yaw_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_Link_1>
+    )
+    {
+        over "left_eye_yaw_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_Link" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_Link>
+    )
+    {
+        over "left_eye_yaw_01_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_Link_1>
+    )
+    {
+        over "left_eye_yaw_01_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_pitch_01_Link" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_pitch_01_Link>
+    )
+    {
+        over "left_eye_pitch_01_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_pitch_01_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_pitch_01_Link_1>
+    )
+    {
+        over "left_eye_pitch_01_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_A_cord" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_A_cord>
+    )
+    {
+        over "left_eye_yaw_01_A_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_A_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_A_cord_1>
+    )
+    {
+        over "left_eye_yaw_01_A_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_A01_cord" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_A01_cord>
+    )
+    {
+        over "left_eye_yaw_01_A01_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_A01_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_A01_cord_1>
+    )
+    {
+        over "left_eye_yaw_01_A01_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_B_cord" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_B_cord>
+    )
+    {
+        over "left_eye_yaw_01_B_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_01_B_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_01_B_cord_1>
+    )
+    {
+        over "left_eye_yaw_01_B_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_pitch_02_Link" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_pitch_02_Link>
+    )
+    {
+        over "left_eye_pitch_02_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_pitch_02_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_pitch_02_Link_1>
+    )
+    {
+        over "left_eye_pitch_02_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_Link" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_Link>
+    )
+    {
+        over "left_eye_yaw_02_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_Link_1>
+    )
+    {
+        over "left_eye_yaw_02_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_A_cord" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_A_cord>
+    )
+    {
+        over "left_eye_yaw_02_A_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_A_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_A_cord_1>
+    )
+    {
+        over "left_eye_yaw_02_A_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_A01_cord" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_A01_cord>
+    )
+    {
+        over "left_eye_yaw_02_A01_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_A01_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_A01_cord_1>
+    )
+    {
+        over "left_eye_yaw_02_A01_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_B_cord" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_B_cord>
+    )
+    {
+        over "left_eye_yaw_02_B_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_eye_yaw_02_B_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/left_eye_yaw_02_B_cord_1>
+    )
+    {
+        over "left_eye_yaw_02_B_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_pich_Link" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_pich_Link>
+    )
+    {
+        over "right_eye_pich_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_pich_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_pich_Link_1>
+    )
+    {
+        over "right_eye_pich_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_Link" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_Link>
+    )
+    {
+        over "right_eye_yaw_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_Link_1>
+    )
+    {
+        over "right_eye_yaw_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_Link" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_Link>
+    )
+    {
+        over "right_eye_yaw_01_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_Link_1>
+    )
+    {
+        over "right_eye_yaw_01_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_pitch_01_Link" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_pitch_01_Link>
+    )
+    {
+        over "right_eye_pitch_01_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_pitch_01_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_pitch_01_Link_1>
+    )
+    {
+        over "right_eye_pitch_01_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_A_cord" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_A_cord>
+    )
+    {
+        over "right_eye_yaw_01_A_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_A_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_A_cord_1>
+    )
+    {
+        over "right_eye_yaw_01_A_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_A01_cord" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_A01_cord>
+    )
+    {
+        over "right_eye_yaw_01_A01_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_A01_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_A01_cord_1>
+    )
+    {
+        over "right_eye_yaw_01_A01_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_B_cord" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_B_cord>
+    )
+    {
+        over "right_eye_yaw_01_B_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_01_B_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_01_B_cord_1>
+    )
+    {
+        over "right_eye_yaw_01_B_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_pitch_02_Link" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_pitch_02_Link>
+    )
+    {
+        over "right_eye_pitch_02_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_pitch_02_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_pitch_02_Link_1>
+    )
+    {
+        over "right_eye_pitch_02_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_Link" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_Link>
+    )
+    {
+        over "right_eye_yaw_02_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_Link_1>
+    )
+    {
+        over "right_eye_yaw_02_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_A_cord" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_A_cord>
+    )
+    {
+        over "right_eye_yaw_02_A_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_A_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_A_cord_1>
+    )
+    {
+        over "right_eye_yaw_02_A_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_A01_cord" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_A01_cord>
+    )
+    {
+        over "right_eye_yaw_02_A01_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_A01_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_A01_cord_1>
+    )
+    {
+        over "right_eye_yaw_02_A01_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_B_cord" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_B_cord>
+    )
+    {
+        over "right_eye_yaw_02_B_cord" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_eye_yaw_02_B_cord_1" (
+        prepend references = @./geometries.usd@</Geometries/right_eye_yaw_02_B_cord_1>
+    )
+    {
+        over "right_eye_yaw_02_B_cord_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_re_01_Link" (
+        prepend references = @./geometries.usd@</Geometries/base_re_01_Link>
+    )
+    {
+        over "base_re_01_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_re_01_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/base_re_01_Link_1>
+    )
+    {
+        over "base_re_01_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_01_roll_Link" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_01_roll_Link>
+    )
+    {
+        over "base_connect_01_roll_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_01_roll_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_01_roll_Link_1>
+    )
+    {
+        over "base_connect_01_roll_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_01_pitch_Link" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_01_pitch_Link>
+    )
+    {
+        over "base_connect_01_pitch_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_01_pitch_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_01_pitch_Link_1>
+    )
+    {
+        over "base_connect_01_pitch_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_re_02_Link" (
+        prepend references = @./geometries.usd@</Geometries/base_re_02_Link>
+    )
+    {
+        over "base_re_02_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_re_02_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/base_re_02_Link_1>
+    )
+    {
+        over "base_re_02_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_02_Link" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_02_Link>
+    )
+    {
+        over "base_connect_02_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_02_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_02_Link_1>
+    )
+    {
+        over "base_connect_02_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_02_pitch_Link" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_02_pitch_Link>
+    )
+    {
+        over "base_connect_02_pitch_Link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "base_connect_02_pitch_Link_1" (
+        prepend references = @./geometries.usd@</Geometries/base_connect_02_pitch_Link_1>
+    )
+    {
+        over "base_connect_02_pitch_Link_1" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rLinearOut" (
+        prepend references = @./geometries.usd@</Geometries/link_rLinearOut>
+    )
+    {
+        over "link_rLinearOut" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rLinearOut_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rLinearOut_1>
+    )
+    {
+        over "link_rLinearOut_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_rLinear" (
+        prepend references = @./geometries.usd@</Geometries/link_rLinear>
+    )
+    {
+        over "link_rLinear" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_rLinear_1" (
+        prepend references = @./geometries.usd@</Geometries/link_rLinear_1>
+    )
+    {
+        over "link_rLinear_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "link_lLinearOut" (
+        prepend references = @./geometries.usd@</Geometries/link_lLinearOut>
+    )
+    {
+        over "link_lLinearOut" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "link_lLinearOut_1" (
+        prepend references = @./geometries.usd@</Geometries/link_lLinearOut_1>
+    )
+    {
+        over "link_lLinearOut_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "leg_base_link" (
+        prepend references = @./geometries.usd@</Geometries/leg_base_link>
+    )
+    {
+        over "leg_base_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "leg_base_link_1" (
+        prepend references = @./geometries.usd@</Geometries/leg_base_link_1>
+    )
+    {
+        over "leg_base_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "right_hip_pitch_link" (
+        prepend references = @./geometries.usd@</Geometries/right_hip_pitch_link>
+    )
+    {
+        over "right_hip_pitch_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_hip_pitch_link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_hip_pitch_link_1>
+    )
+    {
+        over "right_hip_pitch_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "right_hip_roll_link" (
+        prepend references = @./geometries.usd@</Geometries/right_hip_roll_link>
+    )
+    {
+        over "right_hip_roll_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_hip_roll_link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_hip_roll_link_1>
+    )
+    {
+        over "right_hip_roll_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "right_hip_yaw_link" (
+        prepend references = @./geometries.usd@</Geometries/right_hip_yaw_link>
+    )
+    {
+        over "right_hip_yaw_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_hip_yaw_link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_hip_yaw_link_1>
+    )
+    {
+        over "right_hip_yaw_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "right_calf_link" (
+        prepend references = @./geometries.usd@</Geometries/right_calf_link>
+    )
+    {
+        over "right_calf_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_calf_link_1" (
+        prepend references = @./geometries.usd@</Geometries/right_calf_link_1>
+    )
+    {
+        over "right_calf_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "right_wheel_link" (
+        prepend references = @./geometries.usd@</Geometries/right_wheel_link>
+    )
+    {
+        over "right_wheel_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "right_wheel_collision" (
+        prepend references = @./geometries.usd@</Geometries/right_wheel_collision>
+    )
+    {
+        over "right_wheel_collision" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            int newton:maxHullVertices = 1024
+            token physics:approximation = "convexHull"
+            int physxConvexHullCollision:hullVertexLimit = 255
+        }
+    }
+
+    def Xform "left_hip_pitch_link" (
+        prepend references = @./geometries.usd@</Geometries/left_hip_pitch_link>
+    )
+    {
+        over "left_hip_pitch_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_hip_pitch_link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_hip_pitch_link_1>
+    )
+    {
+        over "left_hip_pitch_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "left_hip_roll_link" (
+        prepend references = @./geometries.usd@</Geometries/left_hip_roll_link>
+    )
+    {
+        over "left_hip_roll_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_hip_roll_link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_hip_roll_link_1>
+    )
+    {
+        over "left_hip_roll_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "left_hip_yaw_link" (
+        prepend references = @./geometries.usd@</Geometries/left_hip_yaw_link>
+    )
+    {
+        over "left_hip_yaw_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_hip_yaw_link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_hip_yaw_link_1>
+    )
+    {
+        over "left_hip_yaw_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "left_calf_link" (
+        prepend references = @./geometries.usd@</Geometries/left_calf_link>
+    )
+    {
+        over "left_calf_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_calf_link_1" (
+        prepend references = @./geometries.usd@</Geometries/left_calf_link_1>
+    )
+    {
+        over "left_calf_link_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            token physics:approximation = "convexHull"
+        }
+    }
+
+    def Xform "left_wheel_link" (
+        prepend references = @./geometries.usd@</Geometries/left_wheel_link>
+    )
+    {
+        over "left_wheel_link" (
+            apiSchemas = ["MjcImageableAPI"]
+        )
+        {
+            int mjc:group = 1
+        }
+    }
+
+    def Xform "left_wheel_collision" (
+        prepend references = @./geometries.usd@</Geometries/left_wheel_collision>
+    )
+    {
+        over "left_wheel_collision" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "MjcCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding:physics = None
+            int mjc:group = 1
+            double[] mjc:solref = [0.02, 1]
+            float newton:contactGap = 0 (
+                limits = {
+                    dictionary hard = {
+                        double minimum = 0
+                    }
+                }
+            )
+            int newton:maxHullVertices = 1024
+            token physics:approximation = "convexHull"
+            int physxConvexHullCollision:hullVertexLimit = 255
+        }
+    }
+}
+
