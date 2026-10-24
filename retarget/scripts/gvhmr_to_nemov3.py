@@ -30,19 +30,27 @@ GMR_ROOT = os.path.join(RT, "third_party", "GMR")
 sys.path.insert(0, GMR_ROOT)
 from general_motion_retargeting import params  # noqa: E402
 
+sys.path.insert(0, HERE)
+from make_retarget_mjcf import HEADING_AHEAD  # noqa: E402
+
 ASSETS = os.path.join(RT, "assets", "nemo_v3")
 REF_XML = os.path.join(ASSETS, "booster_mjlab_nemov3", "xmls", "nemov3.xml")
 CONFIG = os.path.join(RT, "configs", "smplx_to_nemo_v3.json")
 WHEEL_R = 0.075
 GROUND_EPS = 0.02  # wheel bottom below this = in contact
+ROBOT_HALF_TRACK = 0.086  # m, wheel centre from the mid-plane at the zero pose
+KNEE_MIN_IK = 0.15  # rad, calf lower bound used inside the IK only
+ELBOW_MAX_IK = 0.2  # rad, elbow upper bound inside the IK only (natural bend is negative)
+ROBOT_HIP_DROP = 0.097  # m, hip pitch joints below the root (link_leg2pelvis) at the zero pose
+HIP_YAW_RATE_MAX = 5.0  # rad/s: hip yaw steers the wheel; keep steering gentle (URDF limit 10)
 LEG_KEYS = ["pelvis", "spine3", "left_knee", "right_knee", "left_ankle", "right_ankle", "left_foot", "right_foot"]
 ARM_KEYS = ["left_shoulder", "right_shoulder", "left_elbow", "right_elbow", "left_wrist", "right_wrist"]  # re-chained, GMR scale 1.0
 
 
-def register(variant: str) -> str:
+def register(variant: str, config: str = CONFIG) -> str:
     name = f"nemo_v3_{variant}"
     params.ROBOT_XML_DICT[name] = os.path.join(ASSETS, "retarget_mjcf", f"nemov3_retarget_{variant}.xml")
-    params.IK_CONFIG_DICT["smplx"][name] = CONFIG
+    params.IK_CONFIG_DICT["smplx"][name] = config
     params.ROBOT_BASE_DICT[name] = "link_leg2pelvis"
     params.VIEWER_CAM_DISTANCE_DICT[name] = 1.5
     return name
@@ -104,35 +112,97 @@ def human_lengths(frames):
     return float(np.percentile(leg, 95)), float(np.percentile(arm, 95))
 
 
-def velocity_heading(frames, fps, v0=0.3, v1=0.8, sigma=3.0):
-    """Wheel heading target: blend the toe point toward the foot's direction of travel when the foot moves.
+def rate_limit(x, max_step):
+    """Symmetric slew-rate limit: forward and backward clamped passes averaged (no one-sided lag)."""
+    f = x.copy()
+    for i in range(1, len(f)):
+        f[i] = f[i - 1] + np.clip(f[i] - f[i - 1], -max_step, max_step)
+    b = x.copy()
+    for i in range(len(b) - 2, -1, -1):
+        b[i] = b[i + 1] + np.clip(b[i] - b[i + 1], -max_step, max_step)
+    return 0.5 * (f + b)
+
+
+def velocity_heading(frames, fps, ahead, v0=0.3, v1=0.8, sigma=3.0, yaw_sigma=5.0, yaw_rate_max=3.0, max_turnout=np.radians(75)):
+    """Wheel heading target: a smooth, rate-limited yaw that follows the foot's travel direction when it moves.
 
     A wheel can only roll along its heading, so for a moving foot the physically meaningful heading is its velocity
-    direction; monocular foot yaw (feet are ~10 px at 360p) is too noisy for that. Blend weight ramps from 0 at v0 to
-    1 at v1 (m/s, human scale); the toe stays at its original distance from the ankle, at ankle height.
+    direction; monocular foot yaw (feet are ~10 px at 360p) is too noisy for that. Per frame the target yaw blends the
+    toe yaw and the travel yaw (weight ramps 0 -> 1 between v0 and v1 m/s, human scale); the travel direction's sign
+    (forward / backward rolling) is taken relative to the pelvis facing, and the heading stays within max_turnout of it
+    (feet turn out <= ~60 deg when stroking; without this, noisy toe yaw sent the hip yaw to its +-135 deg limit). The yaw is
+    then unwrapped, low-passed (yaw_sigma frames) and slew-limited to yaw_rate_max rad/s, because the real hip yaw
+    cannot steer the wheel abruptly. The heading point sits at ankle height, `ahead` (human units) in front of the
+    ankle: HEADING_AHEAD / s_leg, so after GMR's scaling it matches the robot's heading marker and only steers (a
+    human toe length, ~6 cm scaled, pulled the wheel forward against the 12 cm marker).
     """
     from scipy.ndimage import gaussian_filter1d
 
+    wrap = lambda x: (x + np.pi) % (2 * np.pi) - np.pi  # noqa: E731
     out = [dict(f) for f in frames]
+    yaw_pel = pelvis_yaw(frames)
     for s in ("left", "right"):
-        ank = gaussian_filter1d(np.array([f[f"{s}_ankle"][0] for f in frames]), sigma, axis=0, mode="nearest")
+        ank_raw = np.array([f[f"{s}_ankle"][0] for f in frames])
+        ank = gaussian_filter1d(ank_raw, sigma, axis=0, mode="nearest")
         toe = np.array([f[f"{s}_foot"][0] for f in frames])
         v = np.gradient(ank, 1.0 / fps, axis=0)[:, :2]
         sp = np.linalg.norm(v, axis=1)
-        fd = toe[:, :2] - ank[:, :2]
-        L = np.linalg.norm(toe - ank, axis=1)
-        fdu = fd / (np.linalg.norm(fd, axis=1, keepdims=True) + 1e-9)
-        vu = v / (sp[:, None] + 1e-9)
-        vu = np.where(((vu * fdu).sum(1) < 0)[:, None], -vu, vu)  # skating backwards: keep the toe side
-        w = np.clip((sp - v0) / (v1 - v0), 0, 1)[:, None]
-        h = (1 - w) * fdu + w * vu
-        h /= np.linalg.norm(h, axis=1, keepdims=True) + 1e-9
+        w = gaussian_filter1d(np.clip((sp - v0) / (v1 - v0), 0, 1), sigma, mode="nearest")
+        yaw_toe = np.arctan2(toe[:, 1] - ank_raw[:, 1], toe[:, 0] - ank_raw[:, 0])
+        yaw_vel = np.arctan2(v[:, 1], v[:, 0])
+        yaw = np.zeros(len(frames))
+        prev = yaw_pel[0]
+        for i in range(len(frames)):
+            # signs relative to the body's facing: a wheel rolls forward or backward but never points behind the body
+            toe_i = yaw_toe[i] if abs(wrap(yaw_toe[i] - yaw_pel[i])) <= np.pi / 2 else yaw_toe[i] + np.pi
+            cand = yaw_vel[i] if abs(wrap(yaw_vel[i] - yaw_pel[i])) <= np.pi / 2 else yaw_vel[i] + np.pi
+            target = toe_i + w[i] * wrap(cand - toe_i)
+            target = yaw_pel[i] + np.clip(wrap(target - yaw_pel[i]), -max_turnout, max_turnout)
+            yaw[i] = prev + wrap(target - prev)  # unwrapped, continuous
+            prev = yaw[i]
+        yaw = gaussian_filter1d(yaw, yaw_sigma, mode="nearest")
+        yaw = rate_limit(yaw, yaw_rate_max / fps)
         for i, f in enumerate(out):
-            a = np.asarray(frames[i][f"{s}_ankle"][0])
-            new = np.array([a[0] + L[i] * h[i, 0], a[1] + L[i] * h[i, 1], a[2]])
-            orig = np.asarray(toe[i])
-            # low speed: original toe point; moving: horizontal heading point along the velocity
-            f[f"{s}_foot"] = (np.where(w[i] > 0, new, orig) if w[i, 0] >= 1 else (1 - w[i, 0]) * orig + w[i, 0] * new, frames[i][f"{s}_foot"][1])
+            a = ank_raw[i]
+            f[f"{s}_foot"] = (np.array([a[0] + ahead * np.cos(yaw[i]), a[1] + ahead * np.sin(yaw[i]), a[2]]), frames[i][f"{s}_foot"][1])
+    return out
+
+
+def pelvis_yaw(frames, sigma=5.0):
+    """Facing yaw of the human pelvis (SMPL body faces its local +z; GMR's world is z-up), unwrapped and smoothed."""
+    from scipy.ndimage import gaussian_filter1d
+
+    fwd = np.array([R.from_quat(f["pelvis"][1], scalar_first=True).apply([0.0, 0.0, 1.0]) for f in frames])
+    return gaussian_filter1d(np.unwrap(np.arctan2(fwd[:, 1], fwd[:, 0])), sigma, mode="nearest")
+
+
+def adapt_legs(frames, s_leg, robot_half_track, robot_hip_drop):
+    """Move the leg targets (knee, ankle, toe) so the IK sees hip-to-foot geometry, not pelvis-to-foot geometry.
+
+    GMR places the robot root at the scaled human pelvis. nemo_v3's hip pitch joints sit robot_hip_drop (9.7 cm) below
+    its root, the scaled human hips only ~3-4 cm below the pelvis, so the robot lost ~6 cm of leg and folded its knees
+    to the limit. The leg targets are shifted down (pelvis up axis) by the difference. Laterally, scaled human feet land
+    almost under the body while the robot's wheels sit robot_half_track out and its hips adduct only 10 deg, so the
+    targets are also shifted outward. Offsets are in human units (GMR then scales by s_leg); knees get half.
+    """
+    out = []
+    for f in frames:
+        g = dict(f)
+        Rp = R.from_quat(f["pelvis"][1], scalar_first=True)
+        up, lat = Rp.apply([0.0, 1.0, 0.0]), Rp.apply([1.0, 0.0, 0.0])  # SMPL: +y up, +x = body's left
+        pel = np.asarray(f["pelvis"][0])
+        hips = [np.asarray(f[f"{s}_hip"][0]) for s in ("left", "right")]
+        human_drop = -np.mean([np.dot(h - pel, up) for h in hips])
+        half_hip = 0.5 * np.linalg.norm(hips[0] - hips[1])
+        dz = max(robot_hip_drop / s_leg - human_drop, 0.0)
+        dy = max(robot_half_track / s_leg - half_hip, 0.0)
+        lat_h = lat - np.dot(lat, [0.0, 0.0, 1.0]) * np.array([0.0, 0.0, 1.0])
+        lat_h /= np.linalg.norm(lat_h) + 1e-9
+        for side, sign in (("left", 1.0), ("right", -1.0)):
+            for k, frac in (("ankle", 1.0), ("foot", 1.0), ("knee", 0.5)):
+                p, q = f[f"{side}_{k}"]
+                g[f"{side}_{k}"] = (np.asarray(p) - dz * up + sign * frac * dy * lat_h, q)
+        out.append(g)
     return out
 
 
@@ -167,6 +237,9 @@ def postprocess(qpos_ik, ik_names, fps, variant):
             root_q[i] = -root_q[i]
     root_q = lowpass(root_q)
     root_q /= np.linalg.norm(root_q, axis=1, keepdims=True)
+    for c, n in enumerate(order):  # hardware joint speed limits (URDF): legs 10 rad/s, arms >= 23.9 rad/s
+        if n in ik_names and ("hip" in n or "calf" in n):
+            dof[:, c] = rate_limit(dof[:, c], (HIP_YAW_RATE_MAX if "hip_yaw" in n else 10.0) / fps)
     lim = m.jnt_range[[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n) for n in order]]
     limited = np.array([m.jnt_limited[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in order], bool)
     viol_frac = float(((dof[:, limited] < lim[limited, 0] - 1e-6) | (dof[:, limited] > lim[limited, 1] + 1e-6)).any(1).mean())
@@ -182,29 +255,34 @@ def postprocess(qpos_ik, ik_names, fps, variant):
             d.qpos[qadr[n]] = dof[i, c]
         mujoco.mj_kinematics(m, d)
 
-    # 1) ground: per-frame lowest wheel bottom, smoothed, subtracted from the root height
-    centres = {s: np.zeros((N, 3)) for s in wheel_j}
-    axles = {s: np.zeros((N, 3)) for s in wheel_j}
-    for i in range(N):
-        fk(i)
+    def ground():
+        """Per-frame lowest wheel bottom, smoothed, subtracted from the root height; nothing below the ground."""
+        centres = {s: np.zeros((N, 3)) for s in wheel_j}
+        axles = {s: np.zeros((N, 3)) for s in wheel_j}
+        for i in range(N):
+            fk(i)
+            for s in wheel_j:
+                centres[s][i] = d.xpos[wheel_b[s]]
+                axles[s][i] = d.xaxis[wheel_j[s]]
+        bottom = {s: centres[s][:, 2] - WHEEL_R * np.sqrt(np.clip(1 - axles[s][:, 2] ** 2, 0, 1)) for s in wheel_j}
+        lowest = np.minimum(bottom["left"], bottom["right"])
+        shift = savgol_filter(lowest, min(31, N - (1 - N % 2)), 2) if N > 31 else lowest
+        root_p[:, 2] -= shift
         for s in wheel_j:
-            centres[s][i] = d.xpos[wheel_b[s]]
-            axles[s][i] = d.xaxis[wheel_j[s]]
-    bottom = {s: centres[s][:, 2] - WHEEL_R * np.sqrt(np.clip(1 - axles[s][:, 2] ** 2, 0, 1)) for s in wheel_j}
-    lowest = np.minimum(bottom["left"], bottom["right"])
-    shift = savgol_filter(lowest, min(31, N - (1 - N % 2)), 2) if N > 31 else lowest
-    root_p[:, 2] -= shift
-    for s in wheel_j:
-        centres[s][:, 2] -= shift
-        bottom[s] -= shift
-    pen = -np.minimum(np.minimum(bottom["left"], bottom["right"]), 0)
-    root_p[:, 2] += pen  # nothing below the ground
-    for s in wheel_j:
-        bottom[s] += pen
-        centres[s][:, 2] += pen
+            centres[s][:, 2] -= shift
+            bottom[s] -= shift
+        pen = -np.minimum(np.minimum(bottom["left"], bottom["right"]), 0)
+        root_p[:, 2] += pen
+        for s in wheel_j:
+            bottom[s] += pen
+            centres[s][:, 2] += pen
+        return centres, axles, bottom
+
+    # 1) ground alignment
+    centres, axles, bottom = ground()
+    stats = {"joint_limit_violation_frac_before_clip": viol_frac}
     # 2) wheels: no-slip rolling, omega = (v . d) / r while in contact
     dt = 1.0 / fps
-    stats = {"joint_limit_violation_frac_before_clip": viol_frac}
     for s, c in wheel_j.items():
         v = np.gradient(centres[s], dt, axis=0)
         a = axles[s]
@@ -242,6 +320,29 @@ def postprocess(qpos_ik, ik_names, fps, variant):
     return root_p, root_q, dof, order, names, lbp, stats
 
 
+def retarget_frames(rt, frames, s_leg):
+    """Run GMR frame by frame; the heading targets only steer.
+
+    The heading marker is fixed in the calf frame, so it moves up and down when the shank pitches, while a wheel's
+    heading does not depend on that pitch. With the target at ankle height the IK kept the shank vertical (and the
+    knee straight). Each frame the heading target is therefore lifted / lowered by the marker's height relative to
+    the wheel centre in the previous solution (human units = robot offset / s_leg)."""
+    m, d = rt.model, rt.configuration.data
+    bid = lambda b: mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, b)  # noqa: E731
+    ids = {s: (bid(f"{s}_wheel_center"), bid(f"{s}_wheel_heading")) for s in ("left", "right")}
+    dz = {"left": 0.0, "right": 0.0}
+    out = []
+    for f in frames:
+        g = dict(f)
+        for s in ("left", "right"):
+            p, q = f[f"{s}_foot"]
+            g[f"{s}_foot"] = (np.asarray(p) + np.array([0.0, 0.0, dz[s] / s_leg]), q)
+        out.append(rt.retarget(g))
+        for s, (c, h) in ids.items():
+            dz[s] = d.xpos[h][2] - d.xpos[c][2]
+    return np.stack(out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gvhmr_pred_file", required=True)
@@ -249,6 +350,8 @@ def main():
     ap.add_argument("--out_dir", default=os.path.join(RT, "data", "retarget_out"))
     ap.add_argument("--name", default=None)
     ap.add_argument("--raw_heading", action="store_true", help="use the estimated toe point as wheel heading (no velocity blend)")
+    ap.add_argument("--leg_reach", type=float, default=0.95, help="robot leg used per straight human leg (<1 keeps the knees off their straight limit)")
+    ap.add_argument("--config", default=CONFIG, help="GMR IK config (task weights)")
     a = ap.parse_args()
     from general_motion_retargeting import GeneralMotionRetargeting as GMR
     from general_motion_retargeting.utils.smpl import get_gvhmr_data_offline_fast, load_gvhmr_pred_file
@@ -257,24 +360,52 @@ def main():
     os.makedirs(a.out_dir, exist_ok=True)
     smplx_data, body_model, smplx_output, _ = load_gvhmr_pred_file(a.gvhmr_pred_file, os.path.join(GMR_ROOT, "assets", "body_models"))
     frames, fps = get_gvhmr_data_offline_fast(smplx_data, body_model, smplx_output, tgt_fps=30)
-    if not a.raw_heading:
-        frames = velocity_heading(frames, fps)
     h_leg, h_arm = human_lengths(frames)
     r_leg, r_arm = robot_lengths()
-    s_leg, s_arm = r_leg / h_leg, r_arm / h_arm
+    s_leg, s_arm = a.leg_reach * r_leg / h_leg, r_arm / h_arm
+    frames = adapt_legs(frames, s_leg, ROBOT_HALF_TRACK, ROBOT_HIP_DROP)
+    if not a.raw_heading:
+        frames = velocity_heading(frames, fps, ahead=HEADING_AHEAD / s_leg)
     sh_off, l_upper, l_fore = robot_arm_geometry()
     frames = rechain_arms(frames, sh_off, l_upper, l_fore)
     print(f"[{name}] {len(frames)} frames @ {fps} fps; human leg {h_leg:.3f} arm {h_arm:.3f} -> scale leg/torso {s_leg:.3f}; "
           f"arms re-chained with robot segments {l_upper:.3f} / {l_fore:.3f} m")
     for variant in a.variant:
-        robot = register(variant)
+        robot = register(variant, a.config)
         rt = GMR(src_human="smplx", tgt_robot=robot, actual_human_height=None, verbose=False)
         for k in LEG_KEYS:
             rt.human_scale_table[k] = s_leg
         for k in ARM_KEYS:
             rt.human_scale_table[k] = 1.0
         ik_names = [mujoco.mj_id2name(rt.model, mujoco.mjtObj.mjOBJ_JOINT, j) for j in range(rt.model.njnt) if rt.model.jnt_type[j] != mujoco.mjtJoint.mjJNT_FREE]
-        qpos = np.stack([rt.retarget(f) for f in frames])
+        # warm start from nemo_v3's HOME crouch: from GMR's default straight-leg zero pose the knee sits in the IK
+        # singularity (no vertical gradient for the calf) and stayed straight, leaving the root ~7 cm above its target
+        sys.path.insert(0, HERE)
+        from make_retarget_mjcf import HOME_JOINT_POS
+
+        q0 = rt.configuration.q.copy()
+        for n_, v_ in HOME_JOINT_POS.items():
+            j_ = mujoco.mj_name2id(rt.model, mujoco.mjtObj.mjOBJ_JOINT, n_)
+            if j_ >= 0:
+                q0[rt.model.jnt_qposadr[j_]] = v_
+        rt.configuration.update(q0)
+        # keep the knees off the straight-leg singularity during IK (the exported motion keeps the real 0 rad limit):
+        # once a frame straightened a knee, the calf had no gradient left and never bent again
+        import mink
+
+        for side in ("left", "right"):
+            j_ = mujoco.mj_name2id(rt.model, mujoco.mjtObj.mjOBJ_JOINT, f"{side}_calf_joint")
+            rt.model.jnt_range[j_, 0] = max(rt.model.jnt_range[j_, 0], KNEE_MIN_IK)
+        # elbows: same branch on both arms. Both elbow axes are +y, and the natural bend is negative (right arm, and
+        # the mirror sign of the elbow is +1). Unrestricted, the left arm slid into the equivalent "shoulder yaw +180 deg,
+        # elbow bent backwards" solution and stayed there (shoulder yaw at its +2.79 limit, elbow at +1.57).
+        for elbow in ("joint_lElbow", "joint_rElbow"):  # (not `name`: that is the clip name used for the outputs)
+            j_ = mujoco.mj_name2id(rt.model, mujoco.mjtObj.mjOBJ_JOINT, elbow)
+            rt.model.jnt_range[j_, 1] = min(rt.model.jnt_range[j_, 1], ELBOW_MAX_IK)
+        rt.ik_limits = [mink.ConfigurationLimit(rt.model)]
+        q0 = rt.configuration.q.copy()
+        rt.configuration.update(q0)
+        qpos = retarget_frames(rt, frames, s_leg)
         root_p, root_q, dof, order, bodies, lbp, stats = postprocess(qpos, ik_names, fps, variant)
         stats.update(scale_leg=s_leg, scale_arm=s_arm, human_leg_m=h_leg, human_arm_m=h_arm, frames=len(frames), fps=fps, variant=variant, joint_order=order)
         quat_xyzw = root_q[:, [1, 2, 3, 0]]
