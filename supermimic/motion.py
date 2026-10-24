@@ -8,7 +8,8 @@ import os
 import numpy as np
 import torch
 
-from .kinematics import G1Kinematics
+from .kinematics import Kinematics
+from .robot_spec import get_spec
 from .rotations import mat_to_6d, quat_slerp, quat_to_mat, so3_log, yaw_mat
 
 CONTROL_DT = 0.02
@@ -16,14 +17,16 @@ BIN_FRAMES = 50  # 1 s bins for return-based reset sampling
 
 
 class MotionLib:
-    def __init__(self, files: list[str], kin: G1Kinematics, device: str, src_fps: float = 30.0):
+    def __init__(self, files: list[str], kin: Kinematics, device: str, src_fps: float = 30.0):
         self.device = device
         self.names = [os.path.splitext(os.path.basename(f))[0] for f in files]
         ps, qs, js = [], [], []
         lens = []
         for f in files:
             raw = torch.tensor(np.loadtxt(f, delimiter=","), dtype=torch.float32)
-            p, q_xyzw, j = raw[:, :3], raw[:, 3:7], raw[:, 7:36]
+            nj = get_spec().num_joints
+            assert raw.shape[1] == 7 + nj, f"{f}: {raw.shape[1]} columns, expected 7 + {nj} for robot {get_spec().name}"
+            p, q_xyzw, j = raw[:, :3], raw[:, 3:7], raw[:, 7 : 7 + nj]
             quat = torch.cat((q_xyzw[:, 3:4], q_xyzw[:, :3]), -1)
             # resample to 50 Hz
             T_src = raw.shape[0]
@@ -79,6 +82,7 @@ class MotionLib:
         self.bin_clip = torch.tensor(bin_clip, device=device)
         self.bin_start = torch.tensor(bin_start, device=device)
         self.num_bins = len(bin_start)
+        self.pos_mask = torch.tensor([0.0 if v else 1.0 for v in get_spec().vel_mask], device=device)
         self.frame_bin = torch.zeros(self.num_frames, dtype=torch.long, device=device)
         for b in range(self.num_bins):
             c = bin_clip[b]
@@ -87,7 +91,7 @@ class MotionLib:
             self.frame_bin[s:e] = b
 
     @staticmethod
-    def from_dir(path: str, kin: G1Kinematics, device: str) -> MotionLib:
+    def from_dir(path: str, kin: Kinematics, device: str) -> MotionLib:
         files = sorted(glob.glob(os.path.join(path, "*.csv")))
         return MotionLib(files, kin, device)
 
@@ -105,8 +109,8 @@ class MotionLib:
         dp = (Ht @ (self.root_p[fut] - self.root_p[f].unsqueeze(1)).unsqueeze(-1)).squeeze(-1)
         rot = mat_to_6d(Ht @ self.root_R[fut])
         feats = torch.cat(
-            (dp, rot, self.root_v_local[fut], self.root_w_local[fut], self.q[fut], self.qd[fut] * 0.1), -1
-        )  # (B,K,73)
+            (dp, rot, self.root_v_local[fut], self.root_w_local[fut], self.q[fut] * self.pos_mask, self.qd[fut] * 0.1), -1
+        )  # (B,K,15+2J), J joints; wheel angles masked (only their speed is a goal)
         return feats.reshape(f.shape[0], -1)
 
     def ref_state(self, f: torch.Tensor):

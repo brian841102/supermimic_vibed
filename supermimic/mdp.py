@@ -10,45 +10,50 @@ from dataclasses import dataclass
 
 import torch
 
-from .kinematics import G1Kinematics
+from .kinematics import Kinematics
 from .motion import CONTROL_DT, MotionLib
+from .robot_spec import get_spec
 from .rotations import mat_to_6d, quat_to_mat, mat_to_quat, rot_angle_sq, yaw_mat
 
-STATE_DIM = 71
-OBS_DIM = 29 + 29 + 3 + 3 + 29 + 6
-XI_DIM = 33
-NUM_J = 29
+SPEC = get_spec()
+NUM_J = SPEC.num_joints  # G1: 29, nemo_v3: 20
+NUM_TRACKED = len(SPEC.tracked_bodies)
+STATE_DIM = 13 + 2 * NUM_J
+OBS_DIM = NUM_J + NUM_J + 3 + 3 + NUM_J + 6
+XI_DIM = 1 + NUM_J + 3  # friction, joint offsets, CoM offset
+# 1 for position-controlled joints, 0 for velocity-controlled ones (wheels): their angle is not observed / offset
+POS_MASK = torch.tensor([0.0 if v else 1.0 for v in SPEC.vel_mask])
 
 # Table A.1 sensor noise (uniform half-widths), plus the reference-relative orientation
 OBS_NOISE = torch.cat(
     (
-        torch.full((29,), 0.01),
-        torch.full((29,), 0.5),
+        torch.full((NUM_J,), 0.01) * POS_MASK,
+        torch.full((NUM_J,), 0.5),
         torch.full((3,), 0.2),
         torch.full((3,), 0.05),
-        torch.zeros(29),
+        torch.zeros(NUM_J),
         torch.full((6,), 0.05),
     )
 )
 # normalization of the obs before the policy (qd and angular velocity are large)
 OBS_SCALE = torch.cat(
-    (torch.ones(29), torch.full((29,), 0.1), torch.full((3,), 0.25), torch.ones(3), torch.ones(29), torch.ones(6))
+    (torch.ones(NUM_J), torch.full((NUM_J,), 0.1), torch.full((3,), 0.25), torch.ones(3), torch.ones(NUM_J), torch.ones(6))
 )
 MAX_STEP_REWARD = (4 * 1.0 + 2 * 0.5) * CONTROL_DT
 
 
 @dataclass
 class RewardCfg:
-    body_pos_std: float = 0.3
+    body_pos_std: float = 0.3 * SPEC.length_scale
     body_ori_std: float = 0.4
-    body_linvel_std: float = 1.0
+    body_linvel_std: float = 1.0 * SPEC.length_scale
     body_angvel_std: float = 3.14
-    root_pos_std: float = 0.3
+    root_pos_std: float = 0.3 * SPEC.length_scale
     root_ori_std: float = 0.4
     w_action_rate: float = -0.1
     w_joint_limit: float = -2.0
     soft_limit_factor: float = 0.9
-    term_height: float = 0.25
+    term_height: float = SPEC.term_height
     term_tilt: float = 0.8
 
 
@@ -58,7 +63,7 @@ def flatten_state(S) -> torch.Tensor:
 
 
 def unflatten_state(x: torch.Tensor):
-    return x[..., 0:3], quat_to_mat(x[..., 3:7]), x[..., 7:10], x[..., 10:13], x[..., 13:42], x[..., 42:71]
+    return x[..., 0:3], quat_to_mat(x[..., 3:7]), x[..., 7:10], x[..., 10:13], x[..., 13 : 13 + NUM_J], x[..., 13 + NUM_J : 13 + 2 * NUM_J]
 
 
 def invariant_features(S) -> torch.Tensor:
@@ -72,18 +77,18 @@ def invariant_features(S) -> torch.Tensor:
             mat_to_6d(H.transpose(-1, -2) @ R),
             (Rt @ v.unsqueeze(-1)).squeeze(-1),
             (Rt @ w.unsqueeze(-1)).squeeze(-1),
-            q,
+            q * POS_MASK.to(q.device),  # wheel angles carry no information
             qd,
         ),
         -1,
     )
 
 
-INV_DIM = 1 + 6 + 3 + 3 + 29 + 29
+INV_DIM = 1 + 6 + 3 + 3 + NUM_J + NUM_J
 
 
 class MDP:
-    def __init__(self, kin: G1Kinematics, motion: MotionLib, default_q: torch.Tensor, cfg: RewardCfg = RewardCfg()):
+    def __init__(self, kin: Kinematics, motion: MotionLib, default_q: torch.Tensor, cfg: RewardCfg = RewardCfg()):
         self.kin, self.motion, self.cfg = kin, motion, cfg
         self.default_q = default_q
         mid, half = (kin.q_lo + kin.q_hi) / 2, (kin.q_hi - kin.q_lo) / 2
@@ -91,16 +96,17 @@ class MDP:
         dev = default_q.device
         self.obs_noise = OBS_NOISE.to(dev)
         self.obs_scale = OBS_SCALE.to(dev)
+        self.pos_mask = POS_MASK.to(dev)
 
     # ---------------- observation ----------------
     def obs(self, S, a_prev, xi, f) -> torch.Tensor:
         """Noise-free proprioceptive observation (+ reference-relative root orientation)."""
         p, R, v, w, q, qd = S
         Rt = R.transpose(-1, -2)
-        dq0 = xi[..., 1:30]
+        dq0 = xi[..., 1 : 1 + NUM_J]
         g_b = -R[..., 2, :]  # R^T (0,0,-1)
         rel = mat_to_6d(Rt @ self.motion.root_R[f])
-        return torch.cat((q - self.default_q - dq0, qd, (Rt @ w.unsqueeze(-1)).squeeze(-1), g_b, a_prev, rel), -1)
+        return torch.cat(((q - self.default_q - dq0) * self.pos_mask, qd, (Rt @ w.unsqueeze(-1)).squeeze(-1), g_b, a_prev, rel), -1)
 
     def add_noise(self, o: torch.Tensor) -> torch.Tensor:
         return o + (2 * torch.rand_like(o) - 1) * self.obs_noise
@@ -175,11 +181,11 @@ class MDP:
         e_body = (Ht.unsqueeze(-3) @ (ref_bp - bp).unsqueeze(-1)).squeeze(-1).flatten(-2)
         e_root = (Ht @ (rp - p).unsqueeze(-1)).squeeze(-1)
         rel = mat_to_6d(R.transpose(-1, -2) @ rR)
-        return torch.cat((invariant_features(S), m.q[f] - q, e_body, e_root, rel, xi), -1)
+        return torch.cat((invariant_features(S), (m.q[f] - q) * self.pos_mask, e_body, e_root, rel, xi), -1)
 
 
-CRITIC_EXTRA = 29 + 14 * 3 + 3 + 6 + XI_DIM
+CRITIC_EXTRA = NUM_J + NUM_TRACKED * 3 + 3 + 6 + XI_DIM
 
 
 def normalize_xi(xi: torch.Tensor) -> torch.Tensor:
-    return torch.cat(((xi[..., :1] - 0.75) / 0.45, xi[..., 1:30] / 0.01, xi[..., 30:33] / 0.05), -1)
+    return torch.cat(((xi[..., :1] - 0.75) / 0.45, xi[..., 1 : 1 + NUM_J] / 0.01, xi[..., 1 + NUM_J :] / SPEC.com_range[1]), -1)

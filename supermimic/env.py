@@ -20,16 +20,16 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim import SimulationContext
 from isaaclab.utils import configclass, instantiate, replace
 
-from .mdp import MAX_STEP_REWARD, MDP, flatten_state
+from .mdp import MAX_STEP_REWARD, MDP, NUM_J, XI_DIM, flatten_state
 from .motion import CONTROL_DT, MotionLib
-from .robot import G1_CFG, G1_JOINT_NAMES, action_scale
+from .robot_spec import get_spec
 from .rotations import mat_to_quat, quat_to_mat, so3_exp
 
 
 @configclass
 class TrackingSceneCfg(InteractiveSceneCfg):
     ground = AssetBaseCfg(prim_path="/World/ground", spawn=sim_utils.GroundPlaneCfg())
-    robot = replace(G1_CFG, prim_path="{ENV_REGEX_NS}/Robot")
+    robot = replace(get_spec().articulation_cfg(), prim_path="{ENV_REGEX_NS}/Robot")
 
 
 def make_sim(device: str, args) -> SimulationContext:
@@ -41,7 +41,7 @@ def make_sim(device: str, args) -> SimulationContext:
 
 
 class TrackingSim:
-    """Batched G1 motion-tracking simulator.
+    """Batched motion-tracking simulator for the robot selected by robot_spec (G1, nemo_v3).
 
     Must be constructed inside ``launch_simulation(sim_cfg, ...)`` with ``sim_cfg`` from :func:`make_sim`.
     """
@@ -53,7 +53,8 @@ class TrackingSim:
         self.scene = instantiate(TrackingSceneCfg(num_envs=num_envs, env_spacing=0.0, replicate_physics=True))
         self.sim.reset()
         self.robot = self.scene["robot"]
-        assert list(self.robot.joint_names) == G1_JOINT_NAMES, self.robot.joint_names
+        spec = get_spec()
+        assert tuple(self.robot.joint_names) == spec.joint_names, self.robot.joint_names
         self.N = num_envs
         self.motion, self.mdp, self.gamma = motion, mdp, gamma
         self.eval_mode = eval_mode
@@ -61,11 +62,14 @@ class TrackingSim:
         self.reset_noise = reset_noise and not eval_mode
         dev = self.device
         self.default_q = self.robot.data.default_joint_pos.torch[0].clone()
-        self.alpha = torch.tensor([action_scale(n) for n in G1_JOINT_NAMES], device=dev)
-        self.torso_id = self.robot.find_bodies("torso_link")[0][0]
+        self.alpha = torch.tensor(spec.action_scale, device=dev)
+        # velocity-controlled joints (wheels): the action is a velocity target, no position target or offset
+        self.vel = torch.tensor(spec.vel_mask, device=dev)
+        self.pos = (~self.vel).float()
+        self.torso_id = self.robot.find_bodies(spec.com_body)[0][0]
 
-        # ---- sim context xi = [friction, joint offsets(29), torso com offset(3)] ----
-        self.xi = torch.zeros(self.N, 33, device=dev)
+        # ---- sim context xi = [friction, joint offsets(J), torso com offset(3)] ----
+        self.xi = torch.zeros(self.N, XI_DIM, device=dev)
         self._setup_friction()
         if eval_mode:
             self.xi[:, 0] = 1.0
@@ -73,13 +77,13 @@ class TrackingSim:
             self.xi[:, 0] = torch.empty(self.N, device=dev).uniform_(0.3, 1.2)
             com = torch.stack(
                 (
-                    torch.empty(self.N, device=dev).uniform_(-0.025, 0.025),
-                    torch.empty(self.N, device=dev).uniform_(-0.05, 0.05),
-                    torch.empty(self.N, device=dev).uniform_(-0.05, 0.05),
+                    torch.empty(self.N, device=dev).uniform_(-spec.com_range[0], spec.com_range[0]),
+                    torch.empty(self.N, device=dev).uniform_(-spec.com_range[1], spec.com_range[1]),
+                    torch.empty(self.N, device=dev).uniform_(-spec.com_range[2], spec.com_range[2]),
                 ),
                 -1,
             )
-            self.xi[:, 30:33] = com
+            self.xi[:, 1 + NUM_J :] = com
             default_com = self.robot.data.body_com_pose_b.torch[:, self.torso_id, :3].clone()
             self.robot.set_coms_index(coms=(default_com + com).unsqueeze(1), body_ids=[self.torso_id])
         self._apply_friction()
@@ -87,7 +91,7 @@ class TrackingSim:
         # ---- episode bookkeeping ----
         self.f = torch.zeros(self.N, dtype=torch.long, device=dev)
         self.ep_step = torch.zeros(self.N, dtype=torch.long, device=dev)
-        self.a_prev = torch.zeros(self.N, 29, device=dev)
+        self.a_prev = torch.zeros(self.N, NUM_J, device=dev)
         self.start_bin = torch.zeros(self.N, dtype=torch.long, device=dev)
         self.ep_disc_ret = torch.zeros(self.N, device=dev)
         self.ep_ret = torch.zeros(self.N, device=dev)
@@ -168,6 +172,7 @@ class TrackingSim:
         self.robot.write_joint_position_to_sim_index(position=q, env_ids=env_ids)
         self.robot.write_joint_velocity_to_sim_index(velocity=qd, env_ids=env_ids)
         self.robot.set_joint_position_target_index(target=q, env_ids=env_ids)
+        self.robot.set_joint_velocity_target_index(target=qd * self.vel, env_ids=env_ids)
         self.f[env_ids] = frames
         self.ep_step[env_ids] = 0
         self.a_prev[env_ids] = 0.0
@@ -175,7 +180,7 @@ class TrackingSim:
         self.ep_disc_ret[env_ids] = 0.0
         self.ep_ret[env_ids] = 0.0
         if not self.eval_mode:
-            self.xi[env_ids, 1:30] = torch.empty(n, 29, device=dev).uniform_(-0.01, 0.01)
+            self.xi[env_ids, 1 : 1 + NUM_J] = torch.empty(n, NUM_J, device=dev).uniform_(-0.01, 0.01) * self.pos
         self.scene.reset(env_ids)
 
     def refresh(self):
@@ -190,8 +195,9 @@ class TrackingSim:
         xi = self.xi.clone()
         a_prev = self.a_prev.clone()
         ep_step = self.ep_step.clone()
-        target = self.default_q + xi[:, 1:30] + self.alpha * a
-        self.robot.set_joint_position_target_index(target=target)
+        target = self.default_q + xi[:, 1 : 1 + NUM_J] + self.alpha * a
+        self.robot.set_joint_position_target_index(target=target)  # wheels have zero stiffness: ignored
+        self.robot.set_joint_velocity_target_index(target=self.alpha * a * self.vel)  # wheels; 0 for PD joints
         self.scene.write_data_to_sim()
         self.sim.step(render=False)
         self.scene.update(CONTROL_DT)
