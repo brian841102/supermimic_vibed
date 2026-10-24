@@ -9,5 +9,6 @@ PORT=${VISER_PORT:-8080}
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 docker run -d --name supermimic --gpus "\"device=${GPU}\"" --memory="$MEM" --shm-size=16g --user root -p "${PORT}:8080" \
   -e HOME=/root -e WARP_CACHE_PATH=/workspace/supermimic/.cache/warp -e MPLCONFIGDIR=/tmp/mpl \
+  -e TZ="${TZ:-$(readlink /etc/localtime | sed 's#.*/zoneinfo/##')}" \
   -e TORCHINDUCTOR_CACHE_DIR=/workspace/supermimic/.cache/inductor \
   -v "$REPO":/workspace/supermimic -w /workspace/supermimic supermimic:latest sleep infinity
