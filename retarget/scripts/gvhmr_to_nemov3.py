@@ -210,22 +210,80 @@ def lowpass(x, win=9, order=3):
     return savgol_filter(x, win, order, axis=0) if len(x) > win else x
 
 
-BAL_MIN_S = 0.2  # s: single-support phases shorter than this are left as they are
+BAL_MIN_S = 0.5  # s: single-support phases shorter than this are not kept (GVHMR foot spikes last ~0.3-0.4 s)
+BAL_HUMAN_ON, BAL_HUMAN_OFF = 0.05, 0.035  # m: human foot above the other foot -> lifted / back down (hysteresis; GVHMR feet wander 3-4 cm)
 BAL_RAMP_S = 0.4  # s: the CoM shift fades in before lift-off and out after touch-down
 BAL_ITERS = 2  # plan -> IK passes (the second re-plans from the CoM the IK actually reached)
+BAL_LIFT_MIN = 0.045  # m: lifted wheel bottom at least this high inside single-wheel phases (ground clearance)
+BAL_LIFT_RAMP_S = 0.2  # s: the clearance fades in after lift-off and out before touch-down
 
 
-def support_phases(bottom, fps):
+def human_lift_phases(frames, fps):
+    """Which human foot is off the ground, per frame: {"left": bool (N,), "right": bool (N,)}.
+
+    A foot's height is its lower point (ankle or toe) above the other foot's lower point (GMR frames, z up). Lifted with
+    hysteresis (above BAL_HUMAN_ON, down again below BAL_HUMAN_OFF) and only for at least BAL_MIN_S. Judging lifts from
+    the retargeted wheels instead turned 2-4 cm of GVHMR foot noise and heel raises (toe still down) into lifts: the
+    clearance pass then raised them to 4.5 cm, a support change the video does not show (roller40 18.7-21 s)."""
+    from scipy.ndimage import median_filter
+
+    low = np.array([[min(f[f"{s}_ankle"][0][2], f[f"{s}_foot"][0][2]) for s in ("left", "right")] for f in frames])
+    clear = median_filter(low - low.min(1, keepdims=True), size=(5, 1), mode="nearest")
+    out = {}
+    for k, s in enumerate(("left", "right")):
+        up, state = np.zeros(len(low), bool), False
+        for i, h in enumerate(clear[:, k]):
+            state = h > (BAL_HUMAN_OFF if state else BAL_HUMAN_ON)
+            up[i] = state
+        i = 0
+        while i < len(up):
+            if up[i]:
+                j = i
+                while j < len(up) and up[j]:
+                    j += 1
+                if j - i < BAL_MIN_S * fps:
+                    up[i:j] = False
+                i = j
+            else:
+                i += 1
+        out[s] = up
+    return out
+
+
+def ground_unlifted_feet(frames, human_lift, fps):
+    """Lower a foot that is not lifted (human_lift) to the other foot's height, on the IK targets (ankle, toe).
+
+    GVHMR's feet wander 2-4 cm (and a heel raise lifts the ankle while the toe stays down); the wheel follows the ankle,
+    so the robot showed lifts and support changes the video does not have. The offset is faded in / out over BAL_RAMP_S
+    around the real lifts, so GMR's whole-body IK keeps the wheel on the ground (lowering a wheel afterwards can only
+    straighten that knee, which sits near its limit, and made the leg jump)."""
+    from scipy.ndimage import median_filter
+
+    low = np.array([[min(f[f"{s}_ankle"][0][2], f[f"{s}_foot"][0][2]) for s in ("left", "right")] for f in frames])
+    clear = median_filter(low - low.min(1, keepdims=True), size=(5, 1), mode="nearest")
+    ramp = max(int(BAL_RAMP_S * fps), 1)
+    kern = np.hanning(2 * ramp + 1)
+    kern /= kern.sum()
+    out = [dict(f) for f in frames]
+    for k, s in enumerate(("left", "right")):
+        keep = np.clip(np.convolve(human_lift[s].astype(float), kern, mode="same") * 2.0, 0.0, 1.0)  # 1 near real lifts
+        keep = np.maximum(keep, human_lift[s])
+        drop = (1.0 - keep) * clear[:, k]
+        for i, g in enumerate(out):
+            for j in ("ankle", "foot"):
+                p, q = g[f"{s}_{j}"]
+                g[f"{s}_{j}"] = (np.asarray(p) - np.array([0.0, 0.0, drop[i]]), q)
+    return out
+
+
+def support_phases(lifted, fps):
     """Per frame: supporting side (0 left, 1 right, -1 none) of the nearest single-support phase, and its blend weight.
 
-    A wheel is lifted when its bottom is above GROUND_EPS (gaps under 0.1 s closed). Inside a phase the weight is 1;
-    within BAL_RAMP_S before / after it ramps linearly to 0, so the CoM moves over the support wheel before the other
-    wheel leaves the ground and back after it lands."""
-    from scipy.ndimage import binary_closing
-
-    N = len(bottom["left"])
-    gap = max(int(0.1 * fps), 1)
-    lifted = [binary_closing(bottom[s] > GROUND_EPS, np.ones(2 * gap + 1, bool)) for s in ("left", "right")]
+    lifted: {"left"/"right": bool (N,)}. Inside a phase the weight is 1; within BAL_RAMP_S before / after it ramps
+    linearly to 0, so the CoM moves over the support wheel before the other wheel leaves the ground and back after it
+    lands."""
+    N = len(lifted["left"])
+    lifted = [lifted["left"], lifted["right"]]
     single = lifted[0] ^ lifted[1]
     side, w = np.full(N, -1), np.zeros(N)
     ramp = int(BAL_RAMP_S * fps)
@@ -286,7 +344,25 @@ def zmp_com_plan(com, cp, side, w, lat, dt, g, w_zmp=10.0, w_keep=1.0, w_base=0.
     return spsolve((A.T @ A).tocsc(), A.T @ b).reshape(N, 2)
 
 
-def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps):
+def lift_profile(side, w, fps):
+    """0..1 per frame: inside single-wheel phases (w == 1), cosine ramps of BAL_LIFT_RAMP_S at both ends."""
+    N, ramp = len(w), max(int(BAL_LIFT_RAMP_S * fps), 1)
+    inside, prof, i = (side >= 0) & (w >= 1.0), np.zeros(len(w)), 0
+    while i < N:
+        if not inside[i]:
+            i += 1
+            continue
+        j = i
+        while j < N and inside[j] and side[j] == side[i]:
+            j += 1
+        k = np.arange(i, j)
+        edge = np.minimum(k - i, j - 1 - k) / ramp
+        prof[i:j] = 0.5 - 0.5 * np.cos(np.pi * np.clip(edge, 0.0, 1.0))
+        i = j
+    return prof
+
+
+def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps, human_lift=None):
     """Make single-wheel phases dynamically feasible: move the CoM so the ZMP sits on the support wheel's contact.
 
     A crowned tyre gives a point contact, so with one wheel down the lateral ZMP must stay on that wheel (the robot
@@ -336,8 +412,15 @@ def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps):
         return e, lat
 
     com, cp, ax, bot, zmp = measure()
-    side, w = support_phases(bot, fps)
+    if human_lift is None:  # fall back to the retargeted wheels themselves
+        from scipy.ndimage import binary_closing
+
+        human_lift = {s: binary_closing(bot[s] > GROUND_EPS, np.ones(2 * max(int(0.1 * fps), 1) + 1, bool)) for s in bot}
+    side, w = support_phases(human_lift, fps)
+    prof = lift_profile(side, w, fps)
     e0, _ = lateral_err(side, cp, ax, zmp)
+    lifted = lambda b: np.array([b["right" if side[i] == 0 else "left"][i] if side[i] >= 0 else np.inf for i in range(N)])  # noqa: E731
+    clear0 = lifted(bot)
     if not (side >= 0).any():
         return {"single_support_s": 0.0}
 
@@ -349,6 +432,31 @@ def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps):
     frozen = [m.jnt_dofadr[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in order if n not in movable or "wheel" in n]
     constraints = [mink.DofFreezingTask(m, dof_indices=frozen)]
     limits = [mink.ConfigurationLimit(m)]
+    # 1) clearance: inside a single-wheel phase the lifted wheel goes to at least BAL_LIFT_MIN (a 2-4 cm lift left no
+    # margin: the policy tapped the wheel down to rebalance). IK on that leg's hip pitch / roll and calf only (3 joints
+    # for a 3-D target: one smooth solution per frame); the whole-body IK below then holds it while it moves the CoM.
+    # (Wheels that should stay down are kept down earlier, on the human targets: ground_unlifted_feet.)
+    dz = {}
+    for k, s in enumerate(("left", "right")):
+        p_up = np.where((side >= 0) & (side != k), prof, 0.0)  # this wheel is the lifted one
+        dz[s] = np.clip(BAL_LIFT_MIN - bot[s], 0.0, None) * p_up
+    leg_tasks = {s: mink.FrameTask(f"{s}_wheel_link", "body", position_cost=[5.0, 5.0, 50.0], orientation_cost=0.0) for s in wb}  # height first
+    leg_post = mink.PostureTask(m, cost=0.01)
+    for s in ("left", "right"):
+        free = {f"{s}_hip_pitch_joint", f"{s}_hip_roll_joint", f"{s}_calf_joint"}
+        leg_frozen = [m.jnt_dofadr[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in order if n not in free] + list(range(6))
+        for i in np.nonzero(dz[s] > 1e-4)[0]:
+            set_q(i)
+            cfg.update(d.qpos.copy())
+            T = cfg.get_transform_frame_to_world(f"{s}_wheel_link", "body")
+            leg_tasks[s].set_target(mink.SE3.from_rotation_and_translation(T.rotation(), T.translation() + np.array([0.0, 0.0, dz[s][i]])))
+            leg_post.set_target(cfg.q.copy())
+            for _ in range(30):
+                v = mink.solve_ik(cfg, [leg_tasks[s], leg_post], 0.1, "daqp", 1e-3, limits=limits, constraints=[mink.DofFreezingTask(m, dof_indices=leg_frozen)])
+                cfg.integrate_inplace(v, 0.1)
+            dof[i] = cfg.q[qadr]
+    com, cp, ax, bot, zmp = measure()
+    # 2) CoM over the support wheel
     for _ in range(BAL_ITERS):
         _, lat = lateral_err(side, cp, ax, zmp)
         target = com.copy()
@@ -374,10 +482,12 @@ def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps):
     sel = (side >= 0) & (w >= 1.0)
     pct = lambda x: [round(float(np.median(np.abs(x[sel]))) * 100, 2), round(float(np.percentile(np.abs(x[sel]), 90)) * 100, 2)]  # noqa: E731
     return {"single_support_s": float(sel.sum() * dt), "zmp_lateral_cm_median_p90_before": pct(e0), "zmp_lateral_cm_median_p90_after": pct(e1),
-            "com_ik_err_cm_p95": round(float(np.percentile(ik_err, 95)) * 100, 2)}
+            "com_ik_err_cm_p95": round(float(np.percentile(ik_err, 95)) * 100, 2),
+            "lifted_wheel_cm_p10_median_before": [round(float(np.percentile(clear0[prof > 0.99], q)) * 100, 1) for q in (10, 50)],
+            "lifted_wheel_cm_p10_median_after": [round(float(np.percentile(lifted(bot)[prof > 0.99], q)) * 100, 1) for q in (10, 50)]}
 
 
-def postprocess(qpos_ik, ik_names, fps, variant, balance=True):
+def postprocess(qpos_ik, ik_names, fps, variant, balance=True, human_lift=None):
     """qpos (N, 7 + n_ik) on the retarget model -> root_pos, root_quat_xyzw, dof (N, 32) on nemov3.xml + stats."""
     m = mujoco.MjModel.from_xml_path(REF_XML)
     d = mujoco.MjData(m)
@@ -449,7 +559,7 @@ def postprocess(qpos_ik, ik_names, fps, variant, balance=True):
     centres, axles, bottom = ground()
     stats = {"joint_limit_violation_frac_before_clip": viol_frac}
     if balance:
-        stats["balance"] = balance_single_support(m, d, root_p, root_q, dof, order, {n for n in ik_names if "hip" in n or "calf" in n}, fps)
+        stats["balance"] = balance_single_support(m, d, root_p, root_q, dof, order, {n for n in ik_names if "hip" in n or "calf" in n}, fps, human_lift)
         centres, axles, bottom = ground()
     # 3) wheels: no-slip rolling, omega = (v . d) / r while in contact
     dt = 1.0 / fps
@@ -534,6 +644,8 @@ def main():
     h_leg, h_arm = human_lengths(frames)
     r_leg, r_arm = robot_lengths()
     s_leg, s_arm = a.leg_reach * r_leg / h_leg, r_arm / h_arm
+    human_lift = human_lift_phases(frames, fps)  # from the raw human feet, before the leg targets are moved
+    frames = ground_unlifted_feet(frames, human_lift, fps)
     frames = adapt_legs(frames, s_leg, ROBOT_HALF_TRACK, ROBOT_HIP_DROP)
     if not a.raw_heading:
         frames = velocity_heading(frames, fps, ahead=HEADING_AHEAD / s_leg)
@@ -577,7 +689,7 @@ def main():
         q0 = rt.configuration.q.copy()
         rt.configuration.update(q0)
         qpos = retarget_frames(rt, frames, s_leg)
-        root_p, root_q, dof, order, bodies, lbp, stats = postprocess(qpos, ik_names, fps, variant, balance=not a.no_balance)
+        root_p, root_q, dof, order, bodies, lbp, stats = postprocess(qpos, ik_names, fps, variant, balance=not a.no_balance, human_lift=human_lift)
         stats.update(scale_leg=s_leg, scale_arm=s_arm, human_leg_m=h_leg, human_arm_m=h_arm, frames=len(frames), fps=fps, variant=variant, joint_order=order)
         quat_xyzw = root_q[:, [1, 2, 3, 0]]
         stem = os.path.join(a.out_dir, f"{name}_{variant}")
