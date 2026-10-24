@@ -210,7 +210,174 @@ def lowpass(x, win=9, order=3):
     return savgol_filter(x, win, order, axis=0) if len(x) > win else x
 
 
-def postprocess(qpos_ik, ik_names, fps, variant):
+BAL_MIN_S = 0.2  # s: single-support phases shorter than this are left as they are
+BAL_RAMP_S = 0.4  # s: the CoM shift fades in before lift-off and out after touch-down
+BAL_ITERS = 2  # plan -> IK passes (the second re-plans from the CoM the IK actually reached)
+
+
+def support_phases(bottom, fps):
+    """Per frame: supporting side (0 left, 1 right, -1 none) of the nearest single-support phase, and its blend weight.
+
+    A wheel is lifted when its bottom is above GROUND_EPS (gaps under 0.1 s closed). Inside a phase the weight is 1;
+    within BAL_RAMP_S before / after it ramps linearly to 0, so the CoM moves over the support wheel before the other
+    wheel leaves the ground and back after it lands."""
+    from scipy.ndimage import binary_closing
+
+    N = len(bottom["left"])
+    gap = max(int(0.1 * fps), 1)
+    lifted = [binary_closing(bottom[s] > GROUND_EPS, np.ones(2 * gap + 1, bool)) for s in ("left", "right")]
+    single = lifted[0] ^ lifted[1]
+    side, w = np.full(N, -1), np.zeros(N)
+    ramp = int(BAL_RAMP_S * fps)
+    i = 0
+    while i < N:
+        if not single[i]:
+            i += 1
+            continue
+        j = i
+        while j < N and single[j] and lifted[0][j] == lifted[0][i]:
+            j += 1
+        if j - i >= BAL_MIN_S * fps:
+            sup = 1 if lifted[0][i] else 0
+            for k in range(max(i - ramp, 0), min(j + ramp, N)):
+                wk = 1.0 if i <= k < j else 1.0 - (i - k if k < i else k - j + 1) / (ramp + 1)
+                if wk > w[k]:
+                    w[k], side[k] = wk, sup
+        i = j
+    return side, w
+
+
+def zmp_com_plan(com, cp, side, w, lat, dt, g, w_zmp=10.0, w_keep=1.0, w_base=0.05, w_smooth=0.003):
+    """Horizontal CoM path c (N, 2) whose ZMP c - (z/g) c'' lies on the support wheel during single support.
+
+    Solved as one sparse least-squares problem over the whole clip (iterating "shift the CoM by the ZMP error" diverges:
+    the c'' term amplifies anything faster than ~0.7 Hz). Residuals: lateral ZMP offset from the support contact
+    (weight w_zmp * blend weight), departure from the original CoM (full weight outside the phases, longitudinal only
+    inside them, plus a small w_base everywhere) and the acceleration of the change (w_smooth, m per m/s^2)."""
+    import scipy.sparse as sp
+    from scipy.sparse.linalg import spsolve
+
+    N = len(com)
+    I2 = sp.identity(2 * N, format="csr")
+    D2 = sp.diags([1.0, -2.0, 1.0], [0, 1, 2], shape=(N - 2, N)) / dt**2
+    D2 = sp.vstack((sp.csr_matrix((1, N)), D2, sp.csr_matrix((1, N))))
+    D2xy = sp.kron(D2, sp.identity(2), format="csr")
+    k = com[:, 2] / g
+    zmp_op = I2 - sp.diags(np.repeat(k, 2)) @ D2xy  # (2N, 2N): c -> ZMP
+    rows, rhs, wts = [], [], []
+    # direction-projected rows: lat_i . (A c)_i = lat_i . b_i
+    def proj(dirs, mask):
+        P = sp.lil_matrix((N, 2 * N))
+        for i in np.nonzero(mask)[0]:
+            P[i, 2 * i : 2 * i + 2] = dirs[i, :2]
+        return P.tocsr()
+
+    act = (side >= 0) & (w > 0)
+    lon = np.stack((-lat[:, 1], lat[:, 0], np.zeros(N)), 1)
+    c0 = com[:, :2].reshape(-1)
+    cp_sup = np.array([cp[i, side[i], :2] if side[i] >= 0 else com[i, :2] for i in range(N)])
+    P_lat, P_lon = proj(lat, act), proj(lon, act)
+    rows += [P_lat @ zmp_op, P_lon, I2, D2xy]
+    rhs += [(lat[:, :2] * cp_sup).sum(1), P_lon @ c0, c0, D2xy @ c0]
+    full = np.repeat(np.where(act, 0.0, w_keep) + w_base, 2)
+    wts += [w_zmp * w, np.full(N, w_keep) * act, full, np.full(2 * N, w_smooth)]
+    A = sp.vstack([sp.diags(wt) @ r for r, wt in zip(rows, wts)], format="csr")
+    b = np.concatenate([wt * y for y, wt in zip(rhs, wts)])
+    return spsolve((A.T @ A).tocsc(), A.T @ b).reshape(N, 2)
+
+
+def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps):
+    """Make single-wheel phases dynamically feasible: move the CoM so the ZMP sits on the support wheel's contact.
+
+    A crowned tyre gives a point contact, so with one wheel down the lateral ZMP must stay on that wheel (the robot
+    has no ankle). Retargeted skating did not: the free leg was lifted by rolling the whole body ~20 deg, which put the
+    ZMP 3-5 cm (p90 8-11 cm) beside the support wheel, and the trained policy kept both wheels down instead. Per frame,
+    the lateral ZMP error (along the support wheel's axle) shifts the CoM target; IK (mink) then moves the root and the
+    leg joints with the support wheel kept in place, the lifted wheel and the torso orientation held softly and the arms
+    fixed. Repeated BAL_ITERS times since the shift changes the CoM acceleration. Edits root_p / root_q / dof in place.
+    """
+    import mink
+    from scipy.ndimage import gaussian_filter1d
+
+    N, dt, g = len(root_p), 1.0 / fps, 9.81
+    qadr = [m.jnt_qposadr[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in order]
+    wb = {s: mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, f"{s}_wheel_link") for s in ("left", "right")}
+    wj = {s: mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, f"{s}_wheel_joint") for s in ("left", "right")}
+
+    def set_q(i):
+        d.qpos[:3], d.qpos[3:7] = root_p[i], root_q[i]
+        d.qpos[qadr] = dof[i]
+
+    def measure():
+        com, cp, ax, bot = np.zeros((N, 3)), np.zeros((N, 2, 3)), np.zeros((N, 2, 3)), {"left": np.zeros(N), "right": np.zeros(N)}
+        for i in range(N):
+            set_q(i)
+            mujoco.mj_kinematics(m, d)
+            mujoco.mj_comPos(m, d)
+            com[i] = d.subtree_com[0]
+            for k, s in enumerate(("left", "right")):
+                a = d.xaxis[wj[s]]
+                down = -(np.array([0.0, 0.0, 1.0]) - a[2] * a)
+                down /= np.linalg.norm(down) + 1e-9
+                cp[i, k] = d.xpos[wb[s]] + WHEEL_R * down
+                ax[i, k] = a
+                bot[s][i] = cp[i, k, 2]
+        acc = gaussian_filter1d(com, 2.0, axis=0, order=2) / dt**2
+        zmp = com[:, :2] - com[:, 2:3] * acc[:, :2] / g
+        return com, cp, ax, bot, zmp
+
+    def lateral_err(side, cp, ax, zmp):
+        e, lat = np.zeros(N), np.zeros((N, 3))
+        for i in np.nonzero(side >= 0)[0]:
+            a = ax[i, side[i]].copy()
+            a[2] = 0.0
+            lat[i] = a / (np.linalg.norm(a) + 1e-9)
+            e[i] = np.dot(zmp[i] - cp[i, side[i], :2], lat[i, :2])
+        return e, lat
+
+    com, cp, ax, bot, zmp = measure()
+    side, w = support_phases(bot, fps)
+    e0, _ = lateral_err(side, cp, ax, zmp)
+    if not (side >= 0).any():
+        return {"single_support_s": 0.0}
+
+    cfg = mink.Configuration(m)
+    com_task = mink.ComTask(cost=[100.0, 100.0, 1.0])
+    wheel_tasks = {s: mink.FrameTask(f"{s}_wheel_link", "body", position_cost=1.0, orientation_cost=1.0) for s in wb}
+    torso = mink.FrameTask("link_torso", "body", position_cost=0.0, orientation_cost=2.0)
+    posture = mink.PostureTask(m, cost=0.05)
+    frozen = [m.jnt_dofadr[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in order if n not in movable or "wheel" in n]
+    constraints = [mink.DofFreezingTask(m, dof_indices=frozen)]
+    limits = [mink.ConfigurationLimit(m)]
+    for _ in range(BAL_ITERS):
+        _, lat = lateral_err(side, cp, ax, zmp)
+        target = com.copy()
+        target[:, :2] = zmp_com_plan(com, cp, side, w, lat, dt, g)
+        for i in np.nonzero(np.linalg.norm(target[:, :2] - com[:, :2], axis=1) > 1e-4)[0]:
+            set_q(i)
+            cfg.update(d.qpos.copy())
+            com_task.set_target(target[i])
+            for k, s in enumerate(("left", "right")):
+                T = cfg.get_transform_frame_to_world(f"{s}_wheel_link", "body")
+                wheel_tasks[s].set_target(T)
+                wheel_tasks[s].set_position_cost(50.0 if k == side[i] else 2.0)
+            torso.set_target(cfg.get_transform_frame_to_world("link_torso", "body"))
+            posture.set_target(cfg.q.copy())
+            for _ in range(8):
+                v = mink.solve_ik(cfg, [com_task, *wheel_tasks.values(), torso, posture], 0.1, "daqp", 1e-3, limits=limits, constraints=constraints)
+                cfg.integrate_inplace(v, 0.1)
+            q = cfg.q
+            root_p[i], root_q[i], dof[i] = q[:3], q[3:7] / np.linalg.norm(q[3:7]), q[qadr]
+        com, cp, ax, bot, zmp = measure()
+        ik_err = np.linalg.norm(com[:, :2] - target[:, :2], axis=1)
+    e1, _ = lateral_err(side, cp, ax, zmp)
+    sel = (side >= 0) & (w >= 1.0)
+    pct = lambda x: [round(float(np.median(np.abs(x[sel]))) * 100, 2), round(float(np.percentile(np.abs(x[sel]), 90)) * 100, 2)]  # noqa: E731
+    return {"single_support_s": float(sel.sum() * dt), "zmp_lateral_cm_median_p90_before": pct(e0), "zmp_lateral_cm_median_p90_after": pct(e1),
+            "com_ik_err_cm_p95": round(float(np.percentile(ik_err, 95)) * 100, 2)}
+
+
+def postprocess(qpos_ik, ik_names, fps, variant, balance=True):
     """qpos (N, 7 + n_ik) on the retarget model -> root_pos, root_quat_xyzw, dof (N, 32) on nemov3.xml + stats."""
     m = mujoco.MjModel.from_xml_path(REF_XML)
     d = mujoco.MjData(m)
@@ -278,10 +445,13 @@ def postprocess(qpos_ik, ik_names, fps, variant):
             centres[s][:, 2] += pen
         return centres, axles, bottom
 
-    # 1) ground alignment
+    # 1) ground alignment; 2) single-wheel balance (then the ground again: the legs changed)
     centres, axles, bottom = ground()
     stats = {"joint_limit_violation_frac_before_clip": viol_frac}
-    # 2) wheels: no-slip rolling, omega = (v . d) / r while in contact
+    if balance:
+        stats["balance"] = balance_single_support(m, d, root_p, root_q, dof, order, {n for n in ik_names if "hip" in n or "calf" in n}, fps)
+        centres, axles, bottom = ground()
+    # 3) wheels: no-slip rolling, omega = (v . d) / r while in contact
     dt = 1.0 / fps
     for s, c in wheel_j.items():
         v = np.gradient(centres[s], dt, axis=0)
@@ -352,6 +522,7 @@ def main():
     ap.add_argument("--raw_heading", action="store_true", help="use the estimated toe point as wheel heading (no velocity blend)")
     ap.add_argument("--leg_reach", type=float, default=0.95, help="robot leg used per straight human leg (<1 keeps the knees off their straight limit)")
     ap.add_argument("--config", default=CONFIG, help="GMR IK config (task weights)")
+    ap.add_argument("--no_balance", action="store_true", help="keep single-wheel phases as retargeted (ZMP may lie beside the support wheel)")
     a = ap.parse_args()
     from general_motion_retargeting import GeneralMotionRetargeting as GMR
     from general_motion_retargeting.utils.smpl import get_gvhmr_data_offline_fast, load_gvhmr_pred_file
@@ -406,7 +577,7 @@ def main():
         q0 = rt.configuration.q.copy()
         rt.configuration.update(q0)
         qpos = retarget_frames(rt, frames, s_leg)
-        root_p, root_q, dof, order, bodies, lbp, stats = postprocess(qpos, ik_names, fps, variant)
+        root_p, root_q, dof, order, bodies, lbp, stats = postprocess(qpos, ik_names, fps, variant, balance=not a.no_balance)
         stats.update(scale_leg=s_leg, scale_arm=s_arm, human_leg_m=h_leg, human_arm_m=h_arm, frames=len(frames), fps=fps, variant=variant, joint_order=order)
         quat_xyzw = root_q[:, [1, 2, 3, 0]]
         stem = os.path.join(a.out_dir, f"{name}_{variant}")
