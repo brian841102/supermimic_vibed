@@ -288,21 +288,25 @@ python retarget/scripts/make_supermimic_clip.py --src retarget/data/retarget_out
 docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python tools/test_env.py --num_envs 16
 
 # ④ 训练 + 评估监视器（3000 轮之前每 1000 轮、之后每 500 轮存一个 checkpoint，每个都会被评估）
+#    --exp_name 同一组实验的目录；每次训练在底下新建 <YYYY-mm-dd_HH-MM-SS>_<run_name>/（和 mjlab 一样），
+#    logs/<exp_name>/latest 指向最新的一次。--run_name 写这次改了什么，例如 clearance、lift_std2
 docker exec supermimic tmux new -d -s nemov3_train "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python supermimic/train.py \
-    --log_dir logs/nemov3_roller32 --ckpt_every 1000 --ckpt_every_late 500 --ckpt_late_from 3000 2>&1 | tee -a logs/nemov3_roller32/stdout.log"
-docker exec supermimic tmux new -d -s nemov3_eval "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python supermimic/evaluate.py \
-    --run_dir logs/nemov3_roller32 --watch 2>&1 | tee -a logs/nemov3_roller32/eval_stdout.log"
-cat logs/nemov3_roller32/eval.csv
+    --exp_name nemov3_roller32 --run_name clearance --ckpt_every 1000 --ckpt_every_late 500 --ckpt_late_from 3000 2>&1 \
+    | tee -a logs/nemov3_roller32_train.log"
+docker exec supermimic tmux new -d -s nemov3_eval "cd /workspace/supermimic && sleep 60 && SUPERMIMIC_ROBOT=nemov3 python supermimic/evaluate.py \
+    --run_dir logs/nemov3_roller32/latest --watch 2>&1 | tee -a logs/nemov3_roller32/latest/eval_stdout.log"
+cat logs/nemov3_roller32/latest/eval.csv
 
 # ⑤ 录制某个 checkpoint 的评估轨迹，用 viser 查看（容器内 8080 = 主机 VISER_PORT）
-docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python supermimic/evaluate.py --run_dir logs/nemov3_roller32 \
-    --ckpt logs/nemov3_roller32/ckpt_004000.pt --record logs/nemov3_roller32/traj_best.npz
+R=logs/nemov3_roller32/2026-10-25_02-56-45_exp5_lift_floor     # 或 logs/nemov3_roller32/latest
+docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python supermimic/evaluate.py --run_dir $R \
+    --ckpt $R/ckpt_006000.pt --record $R/traj_best.npz
 docker exec -d supermimic bash -c "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python tools/viser_play.py \
-    logs/nemov3_roller32/traj_best.npz --eval logs/nemov3_roller32/ckpt_004000_eval.json --port 8080"
+    $R/traj_best.npz --eval $R/ckpt_006000_eval.json --port 8080"
 
 # ⑥ TensorBoard 看训练曲线：训练只写 CSV，先在容器里转成事件文件（--watch 持续追加新行）
 #    logs/ 归容器的 root 所有，所以转换在容器里跑；TensorBoard 在主机上用任一装了 tensorboard 的环境启动
-docker exec -d supermimic bash -c "cd /workspace/supermimic && python tools/csv_to_tensorboard.py logs/nemov3_roller32 --watch"
+docker exec -d supermimic bash -c "cd /workspace/supermimic && python tools/csv_to_tensorboard.py logs/nemov3_roller32/latest --watch"
 tensorboard --logdir logs --bind_all --port 6006     # 浏览器打开 http://<服务器 IP>:6006
 ```
 
