@@ -30,6 +30,7 @@ def main():
     ap.add_argument("--watch", action="store_true", help="keep appending new rows")
     ap.add_argument("--every", type=float, default=30.0, help="seconds between polls with --watch")
     a = ap.parse_args()
+    a.run_dir = os.path.realpath(a.run_dir)  # logs/<exp_name>/latest -> the run it points to
     out = os.path.join(a.run_dir, "tb")
     shutil.rmtree(out, ignore_errors=True)  # rebuilt from the CSVs every start
     w = SummaryWriter(out)

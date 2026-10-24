@@ -4,7 +4,7 @@ Each motion plays once from its first frame with friction 1.0, no domain randomi
 observation or action noise. A motion fails if the rollout triggers the training termination.
 Normalized return is the undiscounted reward sum divided by its maximum attainable value.
 
-Run as a watcher: ``python supermimic/evaluate.py --run_dir logs/<run> --watch``.
+Run as a watcher: ``python supermimic/evaluate.py --run_dir logs/<run> --watch`` (or ``logs/<exp_name>/latest``).
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ parser.add_argument("--robot", type=str, default=None, help="g1 | nemov3 (defaul
 parser.add_argument("--every", type=int, default=1, help="evaluate every n-th checkpoint")
 add_launcher_args(parser)
 args = parser.parse_args()
+args.run_dir = os.path.realpath(args.run_dir)  # logs/<exp>/latest -> the run it points to now
 if args.robot:
     os.environ["SUPERMIMIC_ROBOT"] = args.robot  # before supermimic.mdp is imported
 args.robot = os.environ.get("SUPERMIMIC_ROBOT", "g1")
