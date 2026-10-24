@@ -180,13 +180,17 @@ cd -
 conda activate gmr
 # ② 用相机重建世界轨迹（摇镜头跟拍的滑行必做；固定机位、不跟拍时可以跳过，直接用 ① 的结果）
 python retarget/scripts/gvhmr_camera_traj.py --pred retarget/data/gvhmr_nopp/skate60/hmr4d_results.pt \
-    --out retarget/data/gvhmr_cam/skate60/hmr4d_results.pt --pos_sigma 8
+    --out retarget/data/gvhmr_cam/skate60/hmr4d_results.pt --pos_sigma 8 --video retarget/data/videos/skate60.mp4
+#   --video                 考虑变焦：用背景估计镜头的缩放和转动（跟拍时一定要加，否则人看起来几乎不动，MILESTONE 18）
+#   --no_flip_repair        不修复人体朝向的短暂前后翻转（默认会修，MILESTONE 18.5）
 
 # ③ 重定向（默认同时出 full 和 hw）
 python retarget/scripts/gvhmr_to_nemov3.py --gvhmr_pred_file retarget/data/gvhmr_cam/skate60/hmr4d_results.pt \
     --out_dir retarget/data/retarget_out
 #   --variant full          只出 full 版
 #   --raw_heading           轮子朝向直接用估计的脚尖点（不按速度方向融合）
+#   --leg_reach 0.95        人腿伸直时对应机器人腿长的比例（默认 0.95；调小会更蹲，太小会让膝盖弯到底）
+#   --no_balance            不做单轮平衡（默认会把单轮时段的重心移到支撑轮上方，MILESTONE 19.2）
 
 # ④ 对比视频
 CUDA_VISIBLE_DEVICES=1 MUJOCO_GL=egl python retarget/tools/render_compare.py \
@@ -208,8 +212,8 @@ ffplay retarget/data/retarget_out/skate60_compare_full_480p.mp4
 
 ```bash
 conda activate gmr
-python retarget/tools/viser_play_motion.py retarget/data/retarget_out/skate60_full.pkl retarget/data/retarget_out/skate60_hw.pkl \
-    --video retarget/data/videos/skate60.mp4 --port 8080
+python retarget/tools/viser_play_motion.py retarget/data/retarget_out/roller40_hw.pkl \
+    --video retarget/data/videos/roller40.mp4 --port 8080
 ```
 
 然后浏览器打开 `http://<服务器IP>:8080`（服务器 IP 可用 `hostname -I` 查）。浏览器提示 WebGL 不可用时，到 `chrome://flags` 打开 *Override software rendering list*。
@@ -220,10 +224,30 @@ python retarget/tools/viser_play_motion.py retarget/data/retarget_out/skate60_fu
 setsid nohup python retarget/tools/viser_play_motion.py retarget/data/retarget_out/skate60_full.pkl \
     retarget/data/retarget_out/skate60_hw.pkl --video retarget/data/videos/skate60.mp4 --port 8080 \
     > retarget/data/viser_8080.log 2>&1 < /dev/null &
-pkill -f viser_play_motion.py      # 停止
+echo $! > retarget/data/viser_8080.pid
+kill $(cat retarget/data/viser_8080.pid)      # 停止（不要用 pkill -f：同一行命令里出现这个名字时会连自己的 shell 一起结束）
 ```
 
-### 2.4 找视频（B 站）
+### 2.4 找视频
+
+**Wikimedia Commons**（公开 API，CC 授权，推荐）。例如本次用的花样轮滑片段：
+
+```bash
+mkdir -p retarget/data/videos/commons && cd retarget/data/videos/commons
+UA="nemo-retarget-research/0.1 (research script)"      # 不要在 User-Agent 里放个人信息
+F="EVD-patinajeartistico-007.ogv"
+U=$(curl -s -A "$UA" "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&titles=File:$F" \
+    | python3 -c "import json,sys; print(list(json.load(sys.stdin)['query']['pages'].values())[0]['imageinfo'][0]['url'])")
+curl -s -A "$UA" -L -o $F "$U"
+cd ..
+ffmpeg -ss 10 -t 40 -i commons/$F -vf "scale=640:448:flags=lanczos,fps=30" -an -c:v libx264 -crf 16 roller40.mp4   # 原片 320x224，放大 2 倍
+cd -
+retarget/scripts/run_video_to_nemov3.sh retarget/data/videos/roller40.mp4 1
+```
+
+**固定机位**的视频（例如舞蹈室）：GVHMR 用 `-s`，并且**保留**它的静止关节后处理；跳过 `gvhmr_camera_traj.py`，直接把 `retarget/data/gvhmr/<name>/hmr4d_results.pt` 交给 `gvhmr_to_nemov3.py`。
+
+**B 站**：
 
 YouTube 在本服务器上要求登录做人机验证，所以改用 B 站。不登录最高只有 360p。
 
@@ -232,16 +256,59 @@ python3 -m venv retarget/third_party/.ytdlp && retarget/third_party/.ytdlp/bin/p
 Y=retarget/third_party/.ytdlp/bin/yt-dlp
 mkdir -p retarget/data/videos && cd retarget/data/videos
 $Y -f "bv*[height<=720]+ba/b" --merge-output-format mp4 -o "bili_p6.%(ext)s" "https://www.bilibili.com/video/av34903340?p=6"
-ffmpeg -ss 56 -t 60 -i bili_p6.mp4 -c:v libx264 -crf 18 -an skate60.mp4      # 截取 60 秒正常速度的片段
+ffmpeg -ss 56 -t 60 -i bili_p6.mp4 -c:v libx264 -crf 18 -an skate60.mp4      # 第 14 节：一级 60 秒（有压步）
+$Y -f "bv*[height<=720]+ba/b" --merge-output-format mp4 -o "bili_p1.%(ext)s" "https://www.bilibili.com/video/av34903340?p=1"
+ffmpeg -ss 28 -t 13.5 -i bili_p1.mp4 -c:v libx264 -crf 18 -an basic_a.mp4     # 第 15 节：基础级蹬冰（无交叉）
+ffmpeg -ss 60 -t 16 -i bili_p1.mp4 -c:v libx264 -crf 18 -an basic_b.mp4       # 第 15 节：基础级蹬冰 + 双足滑行
 ffmpeg -i bili_p6.mp4 -vf "fps=1/20,scale=320:-1,tile=6x6" -frames:v 1 sheet.jpg   # 先拼一张缩略图挑片段
 cd -
 ```
 
-选片段时注意：避开**慢动作**（速度会算错）、**剪辑切换**和**特写**。B 站的搜索 API 不登录会返回 412，要先用网页搜索拿到视频号。
+选片段时注意：避开**慢动作**（速度会算错；如果是整段固定倍速的教学视频，可以用 `setpts` 还原）、**剪辑切换**和**特写**。B 站站内搜索不登录会返回 412，**不要去绕过它**，改用网页搜索拿到视频号，或者用 Commons。
 
 ---
 
-## 3. 已知限制
+## 3. 用 SuperMimic 训练 nemov3
+
+SuperMimic 的代码支持 G1 和 nemov3 两种机型，用 `SUPERMIMIC_ROBOT=g1|nemov3`（或 `--robot`）选择，默认是 G1。
+
+```bash
+# ① 仿真资产（一次即可）：焊死当前硬件不动的关节，删掉 MJCF 自带的 actuator，再转成 USD
+docker/run_container.sh 1 128g                      # 主机 8080 被占用时：VISER_PORT=8090 docker/run_container.sh 1 128g
+docker exec supermimic bash -c "cd /workspace/supermimic && python retarget/scripts/make_sim_mjcf.py && \
+    python tools/mjcf_to_usd.py retarget/assets/nemo_v3/sim/nemov3_sim_hw.xml retarget/assets/nemo_v3/sim/usd \
+    --hull_vertices '.*_wheel_collision=1024'"   # 轮子凸包上限，否则 Newton 只留 64 个顶点（MILESTONE 19.1）
+
+# ② 训练动作：HOME 静止 1 s → 过渡 1 s → 动作 → 过渡 1 s → HOME 静止 1 s
+conda activate gmr
+python retarget/scripts/make_supermimic_clip.py --src retarget/data/retarget_out/roller40_hw.csv --end_s 30.57 \
+    --out retarget/data/supermimic_motions/nemov3/roller32.csv     # robots/nemov3.py 的默认动作目录
+
+# ③ 自检（FK 与仿真器应一致到约 1e-5）
+docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python tools/test_env.py --num_envs 16
+
+# ④ 训练 + 评估监视器（3000 轮之前每 1000 轮、之后每 500 轮存一个 checkpoint，每个都会被评估）
+docker exec supermimic tmux new -d -s nemov3_train "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python supermimic/train.py \
+    --log_dir logs/nemov3_roller32 --ckpt_every 1000 --ckpt_every_late 500 --ckpt_late_from 3000 2>&1 | tee -a logs/nemov3_roller32/stdout.log"
+docker exec supermimic tmux new -d -s nemov3_eval "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python supermimic/evaluate.py \
+    --run_dir logs/nemov3_roller32 --watch 2>&1 | tee -a logs/nemov3_roller32/eval_stdout.log"
+cat logs/nemov3_roller32/eval.csv
+
+# ⑤ 录制某个 checkpoint 的评估轨迹，用 viser 查看（容器内 8080 = 主机 VISER_PORT）
+docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python supermimic/evaluate.py --run_dir logs/nemov3_roller32 \
+    --ckpt logs/nemov3_roller32/ckpt_004000.pt --record logs/nemov3_roller32/traj_best.npz
+docker exec -d supermimic bash -c "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python tools/viser_play.py \
+    logs/nemov3_roller32/traj_best.npz --eval logs/nemov3_roller32/ckpt_004000_eval.json --port 8080"
+
+# ⑥ TensorBoard 看训练曲线：训练只写 CSV，先在容器里转成事件文件（--watch 持续追加新行）
+#    logs/ 归容器的 root 所有，所以转换在容器里跑；TensorBoard 在主机上用任一装了 tensorboard 的环境启动
+docker exec -d supermimic bash -c "cd /workspace/supermimic && python tools/csv_to_tensorboard.py logs/nemov3_roller32 --watch"
+tensorboard --logdir logs --bind_all --port 6006     # 浏览器打开 http://<服务器 IP>:6006
+```
+
+仓库根目录 README.md 里 G1 的命令都不用改：不设 `SUPERMIMIC_ROBOT` 时就是 G1，行为和以前完全一样。
+
+## 4. 已知限制
 
 完整原因和数据见 [MILESTONE.md](MILESTONE.md) 第 14 节。
 
