@@ -31,9 +31,11 @@ def main():
     ap.add_argument("motions", nargs="+")
     ap.add_argument("--video", default=None, help="source video shown in the side panel")
     ap.add_argument("--port", type=int, default=8080)
+    ap.add_argument("--video_offset", nargs="*", default=[], help="clip=seconds: the clip starts this long before the video (e.g. a HOME lead-in)")
     a = ap.parse_args()
 
     clips = {os.path.splitext(os.path.basename(p))[0]: pickle.load(open(p, "rb")) for p in a.motions}
+    offsets = {k: float(v) for k, v in (x.split("=") for x in a.video_offset)}
     m = mujoco.MjModel.from_xml_path(REF_XML)
     d = mujoco.MjData(m)
     order = [mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_JOINT, j) for j in range(m.njnt) if m.jnt_type[j] != mujoco.mjtJoint.mjJNT_FREE]
@@ -125,7 +127,8 @@ def main():
             if trail is not None:
                 trail.visible = show_trail.value
             if img is not None:
-                img.image = frames[min(int(round(i / fps * 30)), len(frames) - 1)]
+                vi = int(round((i / fps - offsets.get(clip_dd.value, 0.0)) * 30))
+                img.image = frames[min(max(vi, 0), len(frames) - 1)]
         time.sleep(1 / 30)
 
 
