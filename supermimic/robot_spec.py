@@ -30,6 +30,10 @@ class RobotSpec:
     velocity_joints: tuple[str, ...] = ()  # velocity-controlled (wheels): no position target, angle not observed
     term_height: float = 0.25
     length_scale: float = 1.0  # robot size relative to G1; scales the position reward widths
+    # points (tracked body, offset in its frame) whose world height gets its own reward term, e.g. wheel centres: lifting
+    # a wheel 5 cm barely moves the averaged body-position error, so without it a policy keeps both wheels down
+    lift_points: tuple[tuple[str, tuple[float, float, float]], ...] = ()
+    lift_std: float = 0.03  # m
     extra: dict = field(default_factory=dict)
 
     @property

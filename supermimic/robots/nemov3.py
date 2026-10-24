@@ -39,6 +39,8 @@ DEFAULT_Q = {
     "joint_lShoulderRoll": 1.22, "joint_rShoulderRoll": 1.22,
 }  # fmt: skip
 INIT_HEIGHT = 0.50
+# wheel centres in their calf frames (wheel link pos in nemov3_sim_hw.xml)
+WHEEL_CENTRES = (("left_calf_link", (0.0, -0.043, -0.175)), ("right_calf_link", (0.0, 0.043, -0.175)))
 
 # (regex, kp, kd, effort, velocity limit)
 ARMATURE = 0.01
@@ -98,4 +100,5 @@ def spec() -> RobotSpec:
         velocity_joints=WHEELS,
         term_height=0.15,
         length_scale=0.5,
+        lift_points=WHEEL_CENTRES,
     )

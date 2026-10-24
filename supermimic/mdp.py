@@ -39,7 +39,11 @@ OBS_NOISE = torch.cat(
 OBS_SCALE = torch.cat(
     (torch.ones(NUM_J), torch.full((NUM_J,), 0.1), torch.full((3,), 0.25), torch.ones(3), torch.ones(NUM_J), torch.ones(6))
 )
-MAX_STEP_REWARD = (4 * 1.0 + 2 * 0.5) * CONTROL_DT
+# wheel / foot height term (robots with SPEC.lift_points only; G1 has none, so its reward is unchanged)
+LIFT_IDX = [SPEC.tracked_bodies.index(b) for b, _ in SPEC.lift_points]
+LIFT_OFFSET = torch.tensor([o for _, o in SPEC.lift_points]).reshape(-1, 3)
+W_LIFT = 1.0 if LIFT_IDX else 0.0
+MAX_STEP_REWARD = (4 * 1.0 + 2 * 0.5 + W_LIFT) * CONTROL_DT
 
 
 @dataclass
@@ -97,6 +101,11 @@ class MDP:
         self.obs_noise = OBS_NOISE.to(dev)
         self.obs_scale = OBS_SCALE.to(dev)
         self.pos_mask = POS_MASK.to(dev)
+        self.lift_offset = LIFT_OFFSET.to(dev)
+
+    def lift_height(self, bp, bR):
+        """World height of SPEC.lift_points from tracked body poses (..., NUM_TRACKED, 3 / 3x3)."""
+        return bp[..., LIFT_IDX, 2] + (bR[..., LIFT_IDX, :, :] @ self.lift_offset.unsqueeze(-1)).squeeze(-1)[..., 2]
 
     # ---------------- observation ----------------
     def obs(self, S, a_prev, xi, f) -> torch.Tensor:
@@ -137,6 +146,9 @@ class MDP:
             + 0.5 * torch.exp(-e_rp / c.root_pos_std**2)
             + 0.5 * torch.exp(-e_ro / c.root_ori_std**2)
         )
+        if W_LIFT:
+            e_lift = ((self.lift_height(m.body_p[f], m.body_R[f]) - self.lift_height(bp, bR)) ** 2).mean(-1)
+            r_track = r_track + W_LIFT * torch.exp(-e_lift / SPEC.lift_std**2)
         r_rate = ((a - a_prev) ** 2).sum(-1)
         r_lim = (torch.relu(q - self.soft_hi) + torch.relu(self.soft_lo - q)).sum(-1)
         r = (r_track + c.w_action_rate * r_rate + c.w_joint_limit * r_lim) * CONTROL_DT
@@ -148,6 +160,7 @@ class MDP:
                 "e_root_pos": e_rp,
                 "action_rate": r_rate,
                 "joint_limit": r_lim,
+                **({"e_lift": e_lift} if W_LIFT else {}),
             }
         return r
 
