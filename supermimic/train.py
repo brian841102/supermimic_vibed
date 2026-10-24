@@ -37,26 +37,34 @@ parser.add_argument("--warmup_steps", type=int, default=64, help="sim steps befo
 parser.add_argument("--wm_only_iters", type=int, default=500, help="world-model-only iterations at the start")
 parser.add_argument("--lr_decay_iters", type=int, default=250_000)
 parser.add_argument("--ckpt_every", type=int, default=2000)
+parser.add_argument("--ckpt_every_late", type=int, default=0, help="denser checkpoints (each one is evaluated) from --ckpt_late_from on; 0 = off")
+parser.add_argument("--ckpt_late_from", type=int, default=3000)
 parser.add_argument("--log_every", type=int, default=50)
-parser.add_argument("--motion_dir", type=str, default=os.path.join(REPO, "data", "lafan1_g1"))
+parser.add_argument("--motion_dir", type=str, default=None, help="default: the robot spec's motion_dir")
+parser.add_argument("--robot", type=str, default=None, help="g1 | nemov3 (default: $SUPERMIMIC_ROBOT or g1)")
 parser.add_argument("--log_dir", type=str, default=os.path.join(REPO, "logs", "run"))
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--resume", type=str, default=None)
 parser.add_argument("--amp", type=str, default="bf16", choices=["none", "bf16"], help="autocast dtype for MLP matmuls")
 add_launcher_args(parser)
 args = parser.parse_args()
+if args.robot:
+    os.environ["SUPERMIMIC_ROBOT"] = args.robot  # before supermimic.mdp is imported
+args.robot = os.environ.get("SUPERMIMIC_ROBOT", "g1")
 
 import torch
 import torch.nn as nn
 
 from supermimic.buffer import ReplayBuffer
 from supermimic.env import TrackingSim, make_sim
-from supermimic.kinematics import G1Kinematics
-from supermimic.mdp import CRITIC_EXTRA, INV_DIM, MDP, OBS_DIM, invariant_features, normalize_xi, unflatten_state
+from supermimic.kinematics import Kinematics
+from supermimic.mdp import CRITIC_EXTRA, INV_DIM, MDP, NUM_J, OBS_DIM, invariant_features, normalize_xi, unflatten_state
+
+GOAL_FRAME_DIM = 15 + 2 * NUM_J  # root dp 3, rot 6, v 3, w 3, q J, qd J
 from supermimic.motion import MotionLib
 import supermimic.networks as networks
 from supermimic.networks import Critic, Policy, WorldModel
-from supermimic.robot import default_joint_pos_list
+from supermimic.robot_spec import get_spec
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -66,11 +74,12 @@ dev = "cuda:0"
 os.makedirs(args.log_dir, exist_ok=True)
 json.dump(vars(args), open(os.path.join(args.log_dir, "args.json"), "w"), indent=2)
 
-kin = G1Kinematics(dev)
+kin = Kinematics(dev)
+args.motion_dir = args.motion_dir or get_spec().motion_dir
 motion = MotionLib.from_dir(args.motion_dir, kin, dev)
-mdp = MDP(kin, motion, torch.tensor(default_joint_pos_list(), device=dev))
+mdp = MDP(kin, motion, torch.tensor(get_spec().default_q, device=dev))
 K, Hh, HZ = args.goal_frames, args.hist, args.horizon
-GOAL_DIM = 73 * K
+GOAL_DIM = GOAL_FRAME_DIM * K
 CRITIC_IN = INV_DIM + CRITIC_EXTRA + GOAL_DIM
 
 wm = WorldModel().to(dev)
@@ -89,7 +98,7 @@ if args.resume:
 
 # per-component floors on the error normalization (pos, rot, lin vel, ang vel, q, qd increments)
 ERR_FLOOR = torch.cat((torch.full((3,), 3e-3), torch.full((3,), 5e-3), torch.full((3,), 2e-2), torch.full((3,), 5e-2),
-                       torch.full((29,), 3e-3), torch.full((29,), 5e-2))).to(dev)  # fmt: skip
+                       torch.full((NUM_J,), 3e-3), torch.full((NUM_J,), 5e-2))).to(dev)  # fmt: skip
 
 
 def _wm_rollout(s, a, xi):
@@ -338,7 +347,8 @@ with launch_simulation(sim_cfg, args):
                   f"| sim_r {row[10]:.3f} ep_len {row[11]:.1f} ep_ret {row[12]:.3f} term {term_frac:.2f} | {ips:.2f} it/s", flush=True)  # fmt: skip
             stats = {k: [] for k in stats}
             agg = {k: [] for k in agg}
-        if (it + 1) % args.ckpt_every == 0 or it + 1 == args.iterations:
+        every = args.ckpt_every_late if args.ckpt_every_late and it + 1 > args.ckpt_late_from else args.ckpt_every
+        if (it + 1) % every == 0 or it + 1 == args.iterations:
             ck = {"wm": wm.state_dict(), "pi": pi.state_dict(), "critic": critic.state_dict(), "opt_wm": opt_wm.state_dict(),
                   "opt_pi": opt_pi.state_dict(), "opt_v": opt_v.state_dict(), "iteration": it + 1,
                   "wall_time": time.time() - t_start, "sim_steps": sim_steps, "args": vars(args),
