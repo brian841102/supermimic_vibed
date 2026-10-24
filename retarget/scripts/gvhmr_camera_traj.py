@@ -133,6 +133,59 @@ def repair_orientation_flips(c, thresh_deg=35.0, win=21, pad=3):
     return segs, dev
 
 
+LEG_JOINTS = (0, 1, 3, 4, 6, 7, 9, 10)  # SMPL-X body_pose: hips, knees, ankles, feet (left, right)
+
+
+def repair_leg_swaps(c, betas, thresh=0.2, win=31, pad=3, max_s=0.7, isolate_s=1.5, fps=30):
+    """Find and bridge brief left / right leg swaps of GVHMR's body pose.
+
+    A monocular estimate sometimes swaps which leg is in front for a few frames and swaps back: the ankles' fore-aft
+    separation in the pelvis frame jumps from -30 to +35 cm and back within 0.4 s while the skater holds the same scissor
+    stance (roller40 18.7-19.1 s), and the retarget then shows a support change. Frames whose separation deviates from its
+    running median by more than thresh m (plus pad frames on each side) get their leg joints slerped between the
+    neighbouring good frames. Only glitch-like segments are repaired, so real crossovers survive: at most max_s long,
+    back to the stance it left (separation before and after within thresh; a real change of the leading leg stays),
+    and no other candidate within isolate_s (a run of them is more likely a real rhythmic alternation, e.g. strides;
+    it is left alone and reported).
+    Edits c["body_pose"] in place; returns (repaired segments, skipped segments, separation).
+    """
+    from scipy.ndimage import median_filter
+
+    bp = c["body_pose"].float()
+    n = len(bp)
+    bm = smplx.create(BODY_MODELS, "smplx", gender="neutral", use_pca=False, num_betas=betas.shape[1], batch_size=n)
+    with torch.no_grad():
+        j = bm(betas=betas.expand(n, -1), body_pose=bp, global_orient=torch.zeros(n, 3)).joints.numpy()
+    sep = j[:, 7, 2] - j[:, 8, 2]  # left minus right ankle along the body's forward axis (+z)
+    bad = np.abs(sep - median_filter(sep, size=win, mode="nearest")) > thresh
+    for _ in range(pad):
+        bad = bad | np.roll(bad, 1) | np.roll(bad, -1)
+    bad[0] = bad[-1] = False
+    segs, i = [], 0
+    while i < n:
+        if bad[i]:
+            k = i
+            while k < n and bad[k]:
+                k += 1
+            segs.append((i, k))
+            i = k
+        else:
+            i += 1
+    keep, skipped = [], []
+    for idx, (a, b) in enumerate(segs):
+        returns = abs(sep[min(b, n - 1)] - sep[max(a - 1, 0)]) < thresh  # comes back to the stance it left
+        near = any(abs(a - b2) < isolate_s * fps or abs(a2 - b) < isolate_s * fps for j, (a2, b2) in enumerate(segs) if j != idx)
+        (keep if (b - a <= max_s * fps and returns and not near) else skipped).append((a, b))
+    segs = keep
+    pose = c["body_pose"].numpy().reshape(n, -1, 3)
+    for a, b in segs:
+        t = (np.arange(a, b) - (a - 1)) / (b - (a - 1))
+        for k in LEG_JOINTS:
+            pose[a:b, k] = Slerp([0, 1], R.from_rotvec([pose[a - 1, k], pose[b, k]]))(t).as_rotvec()
+    c["body_pose"] = torch.tensor(pose.reshape(n, -1), dtype=c["body_pose"].dtype)
+    return segs, skipped, sep
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pred", required=True)
@@ -142,6 +195,7 @@ def main():
     ap.add_argument("--video", default=None, help="zoom-aware mode: the video GVHMR ran on")
     ap.add_argument("--bbx", default=None, help="zoom-aware mode: GVHMR preprocess/bbx.pt (default: next to --pred)")
     ap.add_argument("--no_flip_repair", action="store_true", help="keep GVHMR's in-camera orientations as they are")
+    ap.add_argument("--no_leg_swap_repair", action="store_true", help="keep GVHMR's brief left / right leg swaps")
     a = ap.parse_args()
     d = torch.load(a.pred, map_location="cpu")
     g, c = d["smpl_params_global"], d["smpl_params_incam"]
@@ -151,6 +205,12 @@ def main():
         print(f"orientation flips repaired: {len(segs)} segment(s) " + ", ".join(f"{s0 / 30:.2f}-{s1 / 30:.2f} s (max dev {dev[s0:s1].max():.0f} deg)" for s0, s1 in segs))
     betas = g["betas"][:1].float()
     bm = smplx.create(BODY_MODELS, "smplx", gender="neutral", use_pca=False, num_betas=betas.shape[1])
+    if not a.no_leg_swap_repair:
+        segs, skipped, sep = repair_leg_swaps(c, betas)
+        g["body_pose"] = c["body_pose"].clone()
+        print(f"leg swaps repaired: {len(segs)} segment(s) " + ", ".join(f"{s0 / 30:.2f}-{s1 / 30:.2f} s" for s0, s1 in segs))
+        if skipped:
+            print("  NOT repaired (long, not returning, or in a run - check the video): " + ", ".join(f"{s0 / 30:.2f}-{s1 / 30:.2f} s" for s0, s1 in skipped))
     J0 = bm(betas=betas).joints[0, 0].detach().numpy()  # rest pelvis joint (root rotates about it)
     R_c2w = R.from_rotvec(g["global_orient"].numpy()) * R.from_rotvec(c["global_orient"].numpy()).inv()
     R_c2w = smooth_rot(R_c2w, a.rot_sigma)
