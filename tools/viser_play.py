@@ -147,13 +147,17 @@ def main():
     qpos_r, qpos_g = model.qpos0.copy(), model.qpos0.copy()
     rquat = np.empty(4)
     last = time.time()
+    t_play, t_shown = 0.0, 0.0  # playback time (float): rounding it to the 50 Hz grid every loop made speeds < ~1.3 play alike
     while True:
         now = time.time()
+        if abs(t_slider.value - t_shown) > 1e-6:  # the user dragged the slider, or a clip was selected
+            t_play = t_slider.value
         if playing.value:
-            t = t_slider.value + (now - last) * speed.value
-            if t > t_slider.max:
-                t = 0.0 if loop.value else t_slider.max
-            t_slider.value = round(min(t, t_slider.max) / DT) * DT
+            t_play += (now - last) * speed.value
+            if t_play > t_slider.max:
+                t_play = 0.0 if loop.value else t_slider.max
+            t_shown = round(min(t_play, t_slider.max) / DT) * DT
+            t_slider.value = t_shown
         last = now
         c = state["c"]
         tt = min(int(round(t_slider.value / DT)), state["steps"] - 1)
