@@ -298,7 +298,7 @@ docker exec supermimic tmux new -d -s nemov3_eval "cd /workspace/supermimic && s
 cat logs/nemov3_roller32/latest/eval.csv
 
 # ⑤ 录制某个 checkpoint 的评估轨迹，用 viser 查看（容器内 8080 = 主机 VISER_PORT）
-R=logs/nemov3_roller32/2026-10-25_02-56-45_exp5_lift_floor     # 或 logs/nemov3_roller32/latest
+R=logs/nemov3_roller32/2026-10-25_16-16-18_exp6b_elbow_limit_seed1     # 或 logs/nemov3_roller32/latest
 docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python supermimic/evaluate.py --run_dir $R \
     --ckpt $R/ckpt_006000.pt --record $R/traj_best.npz
 docker exec -d supermimic bash -c "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python tools/viser_play.py \
