@@ -106,6 +106,9 @@ def main():
         show_ghost = server.gui.add_checkbox("Show reference (blue ghost)", initial_value=True)
         anchor = server.gui.add_checkbox("Anchor reference to robot xy", initial_value=True)
         follow = server.gui.add_checkbox("Keep robot centered", initial_value=True)
+        show_trail = server.gui.add_checkbox("Show robot ground path (orange)", initial_value=True)
+        show_ref_trail = server.gui.add_checkbox("Show reference ground path (blue)", initial_value=False)
+        trail_s = server.gui.add_slider("Path length [s]", min=0.5, max=10.0, step=0.5, initial_value=5.0)
     info = server.gui.add_markdown("")
 
     T = d["root_p"].shape[0]
@@ -148,6 +151,17 @@ def main():
     rquat = np.empty(4)
     last = time.time()
     t_play, t_shown = 0.0, 0.0  # playback time (float): rounding it to the 50 Hz grid every loop made speeds < ~1.3 play alike
+    trails, trail_t = {}, 0.0
+
+    def path(name, xy, color):
+        """Ground polyline through xy (n, 2) under /world (it moves with the world when the robot is kept centred)."""
+        if len(xy) < 2:
+            if name in trails:
+                trails.pop(name).remove()
+            return
+        pts = np.zeros((len(xy) - 1, 2, 3), np.float32)
+        pts[:, 0, :2], pts[:, 1, :2], pts[..., 2] = xy[:-1], xy[1:], 0.005
+        trails[name] = server.scene.add_line_segments(f"/world/{name}", points=pts, colors=color, line_width=3.0)
     while True:
         now = time.time()
         if abs(t_slider.value - t_shown) > 1e-6:  # the user dragged the slider, or a clip was selected
@@ -170,6 +184,21 @@ def main():
         mujoco.mju_mat2Quat(rquat, d["ref_root_R"][f].reshape(-1).astype(np.float64))
         qpos_g[3:7] = rquat
         qpos_g[qadr] = d["ref_q"][f]
+        if now - trail_t > 0.1:  # ground paths of the last trail_s seconds, 10 Hz
+            trail_t = now
+            a0 = max(tt - int(trail_s.value / DT), 0)
+            if show_trail.value:
+                path("trail_robot", d["root_p"][a0 : tt + 1, c, :2], (255, 120, 40))
+            elif "trail_robot" in trails:
+                trails.pop("trail_robot").remove()
+            if show_ref_trail.value:
+                fs = d["f"][a0 : tt + 1, c].astype(int)
+                ref_xy = d["ref_root_p"][fs, :2]
+                if anchor.value:  # through the robot, like the anchored ghost
+                    ref_xy = ref_xy - ref_xy[-1] + qpos_r[0:2]
+                path("trail_reference", ref_xy, (90, 165, 255))
+            elif "trail_reference" in trails:
+                trails.pop("trail_reference").remove()
         with server.atomic():
             robot.set_qpos(qpos_r)
             if show_ghost.value:
