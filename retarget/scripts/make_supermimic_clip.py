@@ -1,11 +1,12 @@
 """Training clip for SuperMimic from a retargeted nemo_v3 motion: HOME -> clip -> HOME, both ends static.
 
-1 s at HOME (booster_mjlab HOME_KEYFRAME, the AMP default pose; root z 0.50, yaw of the clip's first frame),
-1 s cosine interpolation to the clip's first frame, the clip up to --end_s, 1 s cosine interpolation back to HOME
-(yaw of the clip's last frame) and 1 s at HOME. The root decelerates from the clip's final speed to rest over the
+--hold_s (1 s) at HOME (booster_mjlab HOME_KEYFRAME, the AMP default pose; root z 0.50, yaw of the clip's first frame),
+--blend_s (1 s) cosine interpolation to the clip's first frame, the clip from --start_s to --end_s, --blend_s cosine
+interpolation back to HOME (yaw of the clip's last frame) and --hold_s at HOME. The root decelerates from the clip's final speed to rest over the
 blend (and accelerates from rest into the clip at the start), so a skater still gliding at the cut stops smoothly. Joints are written in SuperMimic's nemo_v3 order
 (supermimic/robots/nemov3.py JOINT_NAMES = Isaac Lab's articulation order).
 Usage: python retarget/scripts/make_supermimic_clip.py --src data/retarget_out/roller40_hw.csv --end_s 30.57 --out .../roller32.csv
+(--start_s cuts the beginning, e.g. while the skater is not yet fully in the frame; --blend_s 2 for 2 s transitions)
 """
 
 from __future__ import annotations
@@ -54,6 +55,7 @@ def blend(a, b, n):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", required=True, help="CSV from gvhmr_to_nemov3.py (32 joints, NEMOV3_JOINT_ORDER)")
+    ap.add_argument("--start_s", type=float, default=0.0)
     ap.add_argument("--end_s", type=float, required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--hold_s", type=float, default=1.0)
@@ -63,8 +65,8 @@ def main():
     c = np.loadtxt(a.src, delimiter=",")
     order = json.load(open(a.src.replace(".csv", ".json")))["joint_order"]
     sim_order = list(nemov3_joint_names())
-    end = int(round(a.end_s * fps))
-    clip = c[: end + 1][:, list(range(7)) + [7 + order.index(n) for n in sim_order]]
+    start, end = int(round(a.start_s * fps)), int(round(a.end_s * fps))
+    clip = c[start : end + 1][:, list(range(7)) + [7 + order.index(n) for n in sim_order]]
     nh, nb = int(a.hold_s * fps), int(a.blend_s * fps)
     T = (nb + 1) / fps
     # root velocity at the clip ends (the skater may still be gliding): accelerate from rest into the clip and
@@ -84,7 +86,7 @@ def main():
     np.savetxt(a.out, out, delimiter=",", fmt="%.6f")
     segs = {"home_hold": [0, nh - 1], "blend_in": [nh, nh + nb - 1], "clip": [nh + nb, nh + nb + len(clip) - 1],
             "blend_out": [nh + nb + len(clip), nh + 2 * nb + len(clip) - 1], "home_hold_end": [nh + 2 * nb + len(clip), len(out) - 1]}  # fmt: skip
-    json.dump({"source": a.src, "end_s": a.end_s, "fps": fps, "joint_order": sim_order, "segments": segs}, open(a.out.replace(".csv", ".json"), "w"), indent=1)
+    json.dump({"source": a.src, "start_s": a.start_s, "end_s": a.end_s, "fps": fps, "joint_order": sim_order, "segments": segs}, open(a.out.replace(".csv", ".json"), "w"), indent=1)
     nw = [7 + i for i, n in enumerate(sim_order) if "wheel" not in n]
     sp = np.abs(np.diff(out[:, nw], axis=0)) * fps
     print(f"wrote {a.out}: {len(out)} frames = {len(out) / fps:.1f} s; segments {segs}")
