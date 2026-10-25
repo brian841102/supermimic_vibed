@@ -23,6 +23,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_retarget_mjcf import ASSETS, HEAD, HOME_JOINT_POS, PUSH_RODS, WAIST, WRIST_PITCH, weld_joint  # noqa: E402
 
 SIM_VARIANTS = {"sim_hw": HEAD + WAIST + PUSH_RODS + WRIST_PITCH}
+# Elbows bend with negative angles; the URDF's +1.57 lets them fold backwards, which a policy did in the HOME pose
+# (+7-12 deg, tracking hardly sees it: the forearm is 13 cm). +0.1 keeps HOME's 0 inside the 0.9 soft-limit band.
+ELBOW_RANGE = (-1.57, 0.1)
 
 
 def build(src: str, variant: str) -> mujoco.MjSpec:
@@ -31,6 +34,8 @@ def build(src: str, variant: str) -> mujoco.MjSpec:
         weld_joint(spec, name, HOME_JOINT_POS.get(name, 0.0))
     for a in list(spec.actuators):
         spec.delete(a)
+    for name in ("joint_lElbow", "joint_rElbow"):
+        spec.joint(name).range = list(ELBOW_RANGE)
     spec.modelname = f"nemov3_{variant}"
     return spec
 

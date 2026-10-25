@@ -40,7 +40,7 @@ WHEEL_R = 0.075
 GROUND_EPS = 0.02  # wheel bottom below this = in contact
 ROBOT_HALF_TRACK = 0.086  # m, wheel centre from the mid-plane at the zero pose
 KNEE_MIN_IK = 0.15  # rad, calf lower bound used inside the IK only
-ELBOW_MAX_IK = 0.2  # rad, elbow upper bound inside the IK only (natural bend is negative)
+ELBOW_MAX_IK = 0.0  # rad, elbow upper bound inside the IK only (natural bend is negative; > 0 folds the arm backwards)
 ROBOT_HIP_DROP = 0.097  # m, hip pitch joints below the root (link_leg2pelvis) at the zero pose
 HIP_YAW_RATE_MAX = 5.0  # rad/s: hip yaw steers the wheel; keep steering gentle (URDF limit 10)
 LEG_KEYS = ["pelvis", "spine3", "left_knee", "right_knee", "left_ankle", "right_ankle", "left_foot", "right_foot"]

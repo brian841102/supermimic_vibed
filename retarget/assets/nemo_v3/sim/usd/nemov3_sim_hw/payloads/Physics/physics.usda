@@ -164,7 +164,7 @@ over "nemov3_sim_hw"
                                             quatf physics:localRot0 = (1, 0, 0, 0)
                                             quatf physics:localRot1 = (1, 0, 0, 0)
                                             float physics:lowerLimit = -89.95438
-                                            float physics:upperLimit = 89.95438
+                                            float physics:upperLimit = 5.729578
                                         }
                                     }
 
@@ -326,7 +326,7 @@ over "nemov3_sim_hw"
                                             quatf physics:localRot0 = (1, 0, 0, 0)
                                             quatf physics:localRot1 = (1, 0, 0, 0)
                                             float physics:lowerLimit = -89.95438
-                                            float physics:upperLimit = 89.95438
+                                            float physics:upperLimit = 5.729578
                                         }
                                     }
 
