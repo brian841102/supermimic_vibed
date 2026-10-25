@@ -35,7 +35,7 @@ troubleshooting notes: [README_CN.md](README_CN.md).
 | `data/` | not tracked; `tools/download_data.sh` fetches LAFAN1 G1 retargets (HF `lvhaidong/LAFAN1_Retargeting_Dataset`) and the G1 URDF/meshes, then builds `g1_29dof.xml` (MJCF) and the USD |
 | `supermimic/` | implementation (see below) |
 | `tools/` | setup, asset conversion, tests, benchmark, plotting, rendering, failure analysis, browser playback (`viser_play.py`) |
-| `logs/<run>/` | not tracked: `train_log.csv`, `eval.csv`, checkpoints, stdout |
+| `logs/<run>/` | not tracked: `train_log.csv`, `eval.csv`, checkpoints, stdout. Pass `--log_dir`, or `--exp_name <exp> --run_name <name>` to get `logs/<exp>/<YYYY-mm-dd_HH-MM-SS>_<name>/` plus a `latest` link (see `retarget/README.md` §3) |
 | `results/` | success curve and highlight GIF (full videos are rendered locally with `tools/render.py`) |
 
 ## Setup

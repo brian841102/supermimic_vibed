@@ -25,6 +25,26 @@ retarget/
 └── data/          ⚠ 不提交    # 视频、GVHMR 结果、重定向结果、对比视频
 ```
 
+`retarget/data/` 和仓库根目录的 `logs/` 里面是这样（都不提交）：
+
+```
+retarget/data/
+├── videos/                    # 输入视频：roller40.mp4、incoming/roller_house.mp4；commons/ 放 Commons 原片
+├── gvhmr_nopp/<视频名>/       # GVHMR 输出（hmr4d_results.pt、渲染视频）
+├── gvhmr_cam/<视频名>/        # 加上相机轨迹、修好朝向翻转和左右腿互换的 hmr4d_results.pt（重定向的输入）
+├── retarget_out/              # <视频名>_{full,hw}.{csv,pkl,json}、对比视频、<视频名>_clip.pkl（训练片段的播放版）
+├── supermimic_motions/        # 训练动作：roller32/、roller_house/ 各一段；nemov3_multi/ 是默认训练目录（两段的复制）
+├── archive/                   # 旧版动作（让旧 run 可以重现）
+└── run_<视频名>.log、viser_8080.{log,pid}
+
+logs/                          # 仓库根目录
+├── lafan1_main/               # G1：--log_dir 指定，里面直接是 train_log.csv、eval.csv、ckpt_*.pt
+├── nemov3_multi/              # nemov3：--exp_name 指定，同一组实验放在一起
+│   ├── <YYYY-mm-dd_HH-MM-SS>_<run_name>/   # 每次训练一个目录：args.json、train_log.csv、eval.csv、ckpt_*.pt、traj_best.npz、tb/
+│   └── latest -> 最新的一次
+└── archive/                   # 旧的实验
+```
+
 `data/`（视频有版权、体积大）、`third_party/.ytdlp/`、`third_party/*.log` 在仓库根目录的 `.gitignore` 里。GVHMR 的权重放在 submodule 里面的 `inputs/checkpoints/`，不会被提交。
 
 ---
@@ -151,10 +171,10 @@ GMR 源码**不用改**：`gvhmr_to_nemov3.py` 会在运行时把 `nemo_v3_full`
 ### 2.1 一条命令：视频 → 重定向 → 对比视频
 
 ```bash
-retarget/scripts/run_video_to_nemov3.sh retarget/data/videos/skate60.mp4 1     # 第二个参数是 GPU 编号
+retarget/scripts/run_video_to_nemov3.sh retarget/data/videos/roller40.mp4 1     # 第二个参数是 GPU 编号
 ```
 
-60 秒视频大约 3 分钟跑完（GVHMR 约 1 分钟，重定向约 10 秒，两段对比视频约 2 分钟）。产出在 `retarget/data/retarget_out/`：
+1 分钟左右的视频大约 3 分钟跑完（GVHMR 约 1 分钟，重定向约 10 秒，两段对比视频约 2 分钟）。产出在 `retarget/data/retarget_out/`：
 
 | 文件 | 用途 |
 |---|---|
@@ -174,18 +194,18 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate gvhmr
 cd retarget/third_party/GVHMR
 CUDA_VISIBLE_DEVICES=1 GVHMR_NO_STATIC_PP=1 python tools/demo/demo.py \
-    --video=$PWD/../../data/videos/skate60.mp4 --output_root $PWD/../../data/gvhmr_nopp
+    --video=$PWD/../../data/videos/roller40.mp4 --output_root $PWD/../../data/gvhmr_nopp
 cd -
 
 conda activate gmr
 # ② 用相机重建世界轨迹（摇镜头跟拍的滑行必做；固定机位、不跟拍时可以跳过，直接用 ① 的结果）
-python retarget/scripts/gvhmr_camera_traj.py --pred retarget/data/gvhmr_nopp/skate60/hmr4d_results.pt \
-    --out retarget/data/gvhmr_cam/skate60/hmr4d_results.pt --pos_sigma 8 --video retarget/data/videos/skate60.mp4
+python retarget/scripts/gvhmr_camera_traj.py --pred retarget/data/gvhmr_nopp/roller40/hmr4d_results.pt \
+    --out retarget/data/gvhmr_cam/roller40/hmr4d_results.pt --pos_sigma 8 --video retarget/data/videos/roller40.mp4
 #   --video                 考虑变焦：用背景估计镜头的缩放和转动（跟拍时一定要加，否则人看起来几乎不动，MILESTONE 18）
 #   --no_flip_repair        不修复人体朝向的短暂前后翻转（默认会修，MILESTONE 18.5）
 
 # ③ 重定向（默认同时出 full 和 hw）
-python retarget/scripts/gvhmr_to_nemov3.py --gvhmr_pred_file retarget/data/gvhmr_cam/skate60/hmr4d_results.pt \
+python retarget/scripts/gvhmr_to_nemov3.py --gvhmr_pred_file retarget/data/gvhmr_cam/roller40/hmr4d_results.pt \
     --out_dir retarget/data/retarget_out
 #   --variant full          只出 full 版
 #   --raw_heading           轮子朝向直接用估计的脚尖点（不按速度方向融合）
@@ -194,9 +214,9 @@ python retarget/scripts/gvhmr_to_nemov3.py --gvhmr_pred_file retarget/data/gvhmr
 
 # ④ 对比视频
 CUDA_VISIBLE_DEVICES=1 MUJOCO_GL=egl python retarget/tools/render_compare.py \
-    --motion retarget/data/retarget_out/skate60_full.pkl --video retarget/data/videos/skate60.mp4 \
-    --gvhmr_pred retarget/data/gvhmr_cam/skate60/hmr4d_results.pt \
-    --out retarget/data/retarget_out/skate60_compare_full_480p.mp4 --title "(full)"
+    --motion retarget/data/retarget_out/roller40_full.pkl --video retarget/data/videos/roller40.mp4 \
+    --gvhmr_pred retarget/data/gvhmr_cam/roller40/hmr4d_results.pt \
+    --out retarget/data/retarget_out/roller40_compare_full_480p.mp4 --title "(full)"
 #   --seconds 20            只渲染前 20 秒（调参时用）
 ```
 
@@ -205,7 +225,7 @@ CUDA_VISIBLE_DEVICES=1 MUJOCO_GL=egl python retarget/tools/render_compare.py \
 **看对比视频**：
 
 ```bash
-ffplay retarget/data/retarget_out/skate60_compare_full_480p.mp4
+ffplay retarget/data/retarget_out/roller40_compare_full_480p.mp4
 ```
 
 **浏览器交互播放**（可以切换 full / hw，原视频画面同步显示）：
@@ -221,8 +241,8 @@ python retarget/tools/viser_play_motion.py retarget/data/retarget_out/roller40_h
 后台常驻和停止：
 
 ```bash
-setsid nohup python retarget/tools/viser_play_motion.py retarget/data/retarget_out/skate60_full.pkl \
-    retarget/data/retarget_out/skate60_hw.pkl --video retarget/data/videos/skate60.mp4 --port 8080 \
+setsid nohup python retarget/tools/viser_play_motion.py retarget/data/retarget_out/roller40_full.pkl \
+    retarget/data/retarget_out/roller40_hw.pkl --video retarget/data/videos/roller40.mp4 --port 8080 \
     > retarget/data/viser_8080.log 2>&1 < /dev/null &
 echo $! > retarget/data/viser_8080.pid
 kill $(cat retarget/data/viser_8080.pid)      # 停止（不要用 pkill -f：同一行命令里出现这个名字时会连自己的 shell 一起结束）
@@ -256,7 +276,7 @@ python3 -m venv retarget/third_party/.ytdlp && retarget/third_party/.ytdlp/bin/p
 Y=retarget/third_party/.ytdlp/bin/yt-dlp
 mkdir -p retarget/data/videos && cd retarget/data/videos
 $Y -f "bv*[height<=720]+ba/b" --merge-output-format mp4 -o "bili_p6.%(ext)s" "https://www.bilibili.com/video/av34903340?p=6"
-ffmpeg -ss 56 -t 60 -i bili_p6.mp4 -c:v libx264 -crf 18 -an skate60.mp4      # 第 14 节：一级 60 秒（有压步）
+ffmpeg -ss 56 -t 60 -i bili_p6.mp4 -c:v libx264 -crf 18 -an roller40.mp4      # 第 14 节：一级 60 秒（有压步）
 $Y -f "bv*[height<=720]+ba/b" --merge-output-format mp4 -o "bili_p1.%(ext)s" "https://www.bilibili.com/video/av34903340?p=1"
 ffmpeg -ss 28 -t 13.5 -i bili_p1.mp4 -c:v libx264 -crf 18 -an basic_a.mp4     # 第 15 节：基础级蹬冰（无交叉）
 ffmpeg -ss 60 -t 16 -i bili_p1.mp4 -c:v libx264 -crf 18 -an basic_b.mp4       # 第 15 节：基础级蹬冰 + 双足滑行
@@ -279,26 +299,34 @@ docker exec supermimic bash -c "cd /workspace/supermimic && python retarget/scri
     python tools/mjcf_to_usd.py retarget/assets/nemo_v3/sim/nemov3_sim_hw.xml retarget/assets/nemo_v3/sim/usd \
     --hull_vertices '.*_wheel_collision=1024'"   # 轮子凸包上限，否则 Newton 只留 64 个顶点（MILESTONE 19.1）
 
-# ② 训练动作：HOME 静止 1 s → 过渡 1 s → 动作 → 过渡 1 s → HOME 静止 1 s
+# ② 训练动作（以一段视频 roller40 为例）：HOME 静止 1 s → 过渡 1 s → 动作 → 过渡 1 s → HOME 静止 1 s
+#    --end_s 是动作取到视频的第几秒；视频开头人没有全身入镜时，用 --start_s 裁掉；--blend_s 改过渡长度
 conda activate gmr
 python retarget/scripts/make_supermimic_clip.py --src retarget/data/retarget_out/roller40_hw.csv --end_s 30.57 \
-    --out retarget/data/supermimic_motions/nemov3/roller32.csv     # robots/nemov3.py 的默认动作目录
+    --out retarget/data/supermimic_motions/roller32/roller32.csv
+
+# 训练用的动作目录：一个目录里放几段 csv，就同时训练几段（策略靠目标里的未来参考帧区分是哪一段）。
+# 多段视频可以各自按上面的流程单独导出，再把它们的 csv 都复制到同一个目录一起训练，例如：
+mkdir -p retarget/data/supermimic_motions/nemov3_multi
+cp retarget/data/supermimic_motions/roller32/roller32.csv retarget/data/supermimic_motions/nemov3_multi/
+#   cp retarget/data/supermimic_motions/<另一段>/<另一段>.csv retarget/data/supermimic_motions/nemov3_multi/
+# robots/nemov3.py 的默认动作目录就是 nemov3_multi；想只训练其中一段，用 --motion_dir 指向那一段所在的目录。
 
 # ③ 自检（FK 与仿真器应一致到约 1e-5）
 docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python tools/test_env.py --num_envs 16
 
-# ④ 训练 + 评估监视器（3000 轮之前每 1000 轮、之后每 500 轮存一个 checkpoint，每个都会被评估）
+# ④ 训练 + 评估监视器（不带 --motion_dir 就用默认的 nemov3_multi，目录里放几段就一起训练几段；3000 轮之前每 1000 轮、之后每 500 轮存一个 checkpoint，每个都会被评估）
 #    --exp_name 同一组实验的目录；每次训练在底下新建 <YYYY-mm-dd_HH-MM-SS>_<run_name>/（和 mjlab 一样），
-#    logs/<exp_name>/latest 指向最新的一次。--run_name 写这次改了什么，例如 clearance、lift_std2
+#    logs/<exp_name>/latest 指向最新的一次。--run_name 写这次改了什么，例如 exp1_roller32_roller_house；编号只是自己的惯例
 docker exec supermimic tmux new -d -s nemov3_train "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python supermimic/train.py \
-    --exp_name nemov3_roller32 --run_name clearance --ckpt_every 1000 --ckpt_every_late 500 --ckpt_late_from 3000 2>&1 \
-    | tee -a logs/nemov3_roller32_train.log"
+    --exp_name nemov3_multi --run_name exp1_roller32_roller_house --ckpt_every 1000 --ckpt_every_late 500 --ckpt_late_from 3000 2>&1 \
+    | tee -a logs/nemov3_multi_train.log"
 docker exec supermimic tmux new -d -s nemov3_eval "cd /workspace/supermimic && sleep 60 && SUPERMIMIC_ROBOT=nemov3 python supermimic/evaluate.py \
-    --run_dir logs/nemov3_roller32/latest --watch 2>&1 | tee -a logs/nemov3_roller32/latest/eval_stdout.log"
-cat logs/nemov3_roller32/latest/eval.csv
+    --run_dir logs/nemov3_multi/latest --watch 2>&1 | tee -a logs/nemov3_multi/latest/eval_stdout.log"
+cat logs/nemov3_multi/latest/eval.csv
 
 # ⑤ 录制某个 checkpoint 的评估轨迹，用 viser 查看（容器内 8080 = 主机 VISER_PORT）
-R=logs/nemov3_roller32/2026-10-25_16-16-18_exp6b_elbow_limit_seed1     # 或 logs/nemov3_roller32/latest
+R=logs/nemov3_multi/2026-10-25_22-58-12_exp1_roller32_roller_house     # 或 logs/nemov3_multi/latest
 docker exec -e SUPERMIMIC_ROBOT=nemov3 supermimic python supermimic/evaluate.py --run_dir $R \
     --ckpt $R/ckpt_006000.pt --record $R/traj_best.npz
 docker exec -d supermimic bash -c "cd /workspace/supermimic && SUPERMIMIC_ROBOT=nemov3 python tools/viser_play.py \
@@ -306,7 +334,7 @@ docker exec -d supermimic bash -c "cd /workspace/supermimic && SUPERMIMIC_ROBOT=
 
 # ⑥ TensorBoard 看训练曲线：训练只写 CSV，先在容器里转成事件文件（--watch 持续追加新行）
 #    logs/ 归容器的 root 所有，所以转换在容器里跑；TensorBoard 在主机上用任一装了 tensorboard 的环境启动
-docker exec -d supermimic bash -c "cd /workspace/supermimic && python tools/csv_to_tensorboard.py logs/nemov3_roller32/latest --watch"
+docker exec -d supermimic bash -c "cd /workspace/supermimic && python tools/csv_to_tensorboard.py logs/nemov3_multi/latest --watch"
 tensorboard --logdir logs --bind_all --port 6006     # 浏览器打开 http://<服务器 IP>:6006
 ```
 
@@ -316,6 +344,6 @@ tensorboard --logdir logs --bind_all --port 6006     # 浏览器打开 http://<�
 
 完整原因和数据见 [MILESTONE.md](MILESTONE.md) 第 14 节。
 
-- SuperMimic 代码还是 G1 专用的（`supermimic/motion.py` 写死读 29 列关节），要移植到 nemov3 才能直接训练这份 CSV。
-- 360p、会变焦的教学视频估计质量有限：侧滑 0.33–0.37，速度曲线有尖峰。正式数据建议用固定机位、高帧率、更高分辨率自己拍（MILESTONE.md 第 7 节）。
-- 压步、后仰在 nemo_v3 上本来就做不到：髋只能内收 10°，腰只能前倾。
+- **SuperMimic 同时支持 G1 和 nemov3**：机型相关的常数都在 `supermimic/robot_spec.py` 和 `supermimic/robots/`，`motion.py` 读 `7 + 关节数` 列（G1 是 29，nemov3 是 20，列数不对会直接报错）。nemov3 的默认动作目录是 `retarget/data/supermimic_motions/nemov3_multi/`（见 §3）。
+- **视频质量决定重定向质量**：GVHMR 对低分辨率、会变焦的视频估计有限。最早的 360p 教学视频（skate60）侧滑平均 0.33–0.37、速度曲线有尖峰；现在变焦由考虑变焦的相机轨迹处理，侧滑平均：roller40 约 0.07–0.11、roller_house 约 0.14–0.22。GVHMR 还会偶尔把人体朝向前后翻转、把左右腿认反，流程里已自动修复（`gvhmr_camera_traj.py`，MILESTONE 第 18、20 节）。正式数据建议自己拍：固定机位或平稳跟拍、高帧率、高分辨率、一个连续镜头、单人全身入镜（MILESTONE 第 7 节）。
+- **压步、后仰在 nemo_v3 上做不到**：髋 roll 范围是 −10° ~ +60°，只能内收 10°（腿长约 0.5 m，轮子最多靠到中线，交叉不过去）；腰（只有全身版 `full` 有）pitch 0 ~ 30°，只能前倾、不能后仰，roll ±10°，yaw ±80°。**当前硬件版 `hw` 的腰、头、推杆、腕 pitch 是焊死的**，腰完全不能动。

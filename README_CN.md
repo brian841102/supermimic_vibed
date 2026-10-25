@@ -94,7 +94,7 @@ docker exec -it supermimic python tools/viser_play.py logs/lafan1_main/traj_0120
 | `data/` | 不入库；`tools/download_data.sh` 下载 LAFAN1 G1 重定向数据（HF `lvhaidong/LAFAN1_Retargeting_Dataset`）和 G1 URDF/网格，然后生成 `g1_29dof.xml`（MJCF）和 USD |
 | `supermimic/` | 算法实现（见下文） |
 | `tools/` | 环境搭建、资产转换、测试、基准、画图、渲染、失败分析、**viser 播放（`viser_play.py`，本次新增）** |
-| `logs/<run>/` | 不入库：`train_log.csv`、`eval.csv`、checkpoint、stdout |
+| `logs/<run>/` | 不入库：`train_log.csv`、`eval.csv`、checkpoint、stdout。用 `--log_dir` 指定，或用 `--exp_name <实验> --run_name <名称>` 得到 `logs/<实验>/<YYYY-mm-dd_HH-MM-SS>_<名称>/` 和指向最新一次的 `latest`（见 `retarget/README.md` §3） |
 | `results/` | 成功率曲线和演示 GIF |
 
 ---

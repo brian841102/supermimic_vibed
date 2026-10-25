@@ -15,7 +15,7 @@
 | 项目 | 内容 |
 |---|---|
 | **优选的训练** | `logs/nemov3_roller32/2026-10-25_16-16-18_exp6b_elbow_limit_seed1`，用第 6000 轮的 checkpoint（`ckpt_006000.pt`） |
-| 训练动作 | `retarget/data/supermimic_motions/nemov3/roller32.csv`（来自 `roller40_hw`：权重 20、单轮平衡 + 离地余量 4.5 cm、人脚判定单轮时段、修复左右腿互换、手肘不往后折） |
+| 训练动作 | `retarget/data/supermimic_motions/roller32/roller32.csv`（原目录名 `nemov3`，2026-10-26 改名；来自 `roller40_hw`：权重 20、单轮平衡 + 离地余量 4.5 cm、人脚判定单轮时段、修复左右腿互换、手肘不往后折） |
 | 奖励 / 模型 | 轮心高度奖励（两轮平均、σ = 3 cm）加单边线性惩罚（-10 / m）；仿真里手肘范围 [−1.57, +0.1] rad；轮子凸包 472 个顶点 |
 | 结果 | 回报 **0.902**（0/1 失败）；中段点脚 **0 次**；抬起轮高度 p10 / 中位数 3.8 / 4.6 cm；单轮时段 ZMP 偏离中位数 0.4–0.7 cm；HOME 静止时手肘 −1.1° / −1.1°；根部角加速度 4.2（参考 2.7）、垂直加速度 0.97（参考 0.53） |
 | 为什么是它 | exp5（回报 0.924，点脚 3 次）HOME 静止时手肘往后折 7–10°，不符合实体机"手肘略向后弓、前臂朝前"的预热；exp6（同设定、种子 0）点脚 9 次、抖动大，换种子（exp6b）后点脚降到 0 次，说明那是单次训练的运气。exp6b 是目前点脚最少、抖动最小、手肘修正后的版本 |
@@ -696,7 +696,7 @@ basic_b 的侧滑降到 0.12–0.15，因为这段的人体估计和相机轨迹
 
 ### 17.1 训练动作
 
-`retarget/data/supermimic_motions/nemov3/roller32.csv`（生成脚本 `scripts/make_supermimic_clip.py`）：
+`retarget/data/supermimic_motions/roller32/roller32.csv`（当时叫 `supermimic_motions/nemov3/`，后来改名；生成脚本 `scripts/make_supermimic_clip.py`）：
 
 | 段 | 时长 | 内容 |
 |---|---|---|
@@ -895,7 +895,7 @@ basic_b 的侧滑降到 0.12–0.15，因为这段的人体估计和相机轨迹
   朝向标记点固定在小腿上，权重越高，IK 越倾向用伸直小腿来满足它。用户在 viser 里比较后，选择**权重 20**：膝盖弯曲更像滑冰时蹲着的姿势，朝向误差稍大。配置因此回到已提交的版本（20）。
 - **改名**：正式版本不再带 z / zb 这类后缀，换成以下名字：
   - 重定向结果：`data/retarget_out/roller40_{hw,full}.*`；
-  - 训练片段：`data/supermimic_motions/nemov3/roller32.csv`（`robots/nemov3.py` 的默认动作目录）；
+  - 训练片段：`data/supermimic_motions/roller32/roller32.csv`（当时叫 `nemov3/`，是 `robots/nemov3.py` 的默认动作目录；后来改名为 `roller32/`，默认改成 `nemov3_multi`）；
   - 训练 run：`logs/nemov3_roller32`（权重 20，3000 轮之前每 1000 轮评估、之后每 500 轮）。
 - **旧产物归档**：搬走时保留原名，本文件前面提到的名字都还能在这里找到：
   - 训练 run：`logs/archive/`（`nemov3_roller32`、`nemov3_roller32z`、`nemov3_roller32z_prefix_unrepaired`、`nemov3_roller32zb`、`nemov3_roller32zb_cylinder`）；
@@ -1079,3 +1079,46 @@ basic_b 的侧滑降到 0.12–0.15，因为这段的人体估计和相机轨迹
 - `sim_rew` / `imag_rew` 的除数改成 `MAX_STEP_REWARD`；
 - 轮心高度奖励推广成通用的末端点追踪；
 - 实体机上手肘的机构限位和预热姿势，等用户提供实机数据后再核对。
+
+## 21. 第二段动作 roller_house 与两段一起训练（2026-10-25）
+
+### 21.1 视频和选片
+- 想再找几段约 30 s、不交叉、抬脚不超过 2 s 的轮滑片段。YouTube 在这台服务器上会弹人机验证，**不绕过**，改由用户在自己的电脑下载，放到服务器 `retarget/data/videos/incoming/`。
+- 先去 Wikimedia Commons 找了一轮：荷兰的两段老新闻片（剪辑多、选手很小）、摩托领骑的竞速、EVD 系列其余各段（片头 / 历史 / 比赛合辑 / 绿幕教学）都不合用；只有 EVD-patinajeartistico-005 的 3–33 s 勉强可用，没有采用。
+- 用户提供 `Roller skating inside the house.mp4`（608×1080 竖屏，9.7 s，一个连续镜头，单人，室内四轮鞋：滑远 → 转身 → 滑回）。只有约 10 s，蓬裙会遮腿。
+
+### 21.2 重定向
+- 流程不变（`run_video_to_nemov3.sh`）：考虑变焦的相机轨迹（只有 7° 的镜头转动）、左右腿互换修复 1 段（1.2–1.5 s）、单轮平衡。
+- 整段指标：两轮左右间距最小 0.062 m（轮距 0.172 m），**没有交叉**；右轮单轮最长 1.9 s、其余 ≤ 1.3 s；根部朝向累计转了约 650°（最高 277°/s，是一个原地转身加迈步）。
+- 用户澄清："脚的朝向不能剧烈变化"指的是**髋 yaw 关节**的角速度，不是根部相对世界的转速；**根部在世界坐标里转多快都可以**。所以不限制 277°/s，只检查髋 yaw：整段最大 5.3–5.5 rad/s（出现在 7.4 s 之后），截取后的片段只有 2.0 rad/s（硬件上限 10；roller40 是 3.0）。
+
+### 21.3 训练片段
+- `make_supermimic_clip.py` 新增 `--start_s`（裁掉开头）。起点 **1.1 s**：用 GVHMR 的人物框判断，从这一刻起头和脚都完整在画面内；终点 **7.4 s**：她转完身站定，根部速度 0.07 m/s、转速降到 28°/s，再往后她又迈步朝镜头走。
+- 用户一开始要"前后各 2 s 的衔接"，做出来后觉得太长。roller32 的做法是 1 s 静止加 1 s 衔接（占动作加衔接的 6%），这段只有 6.3 s，2 s 的衔接占 39%（1 s 版本占 24%）。改成 **1 s**，和 roller32 一致；衔接段关节最大速度进 1.08 / 出 1.99 rad/s（roller32 是 1.22 / 2.02）。结果：1 s 静止 + 1 s 衔接 + 6.3 s 动作 + 1 s 衔接 + 1 s 静止，共 10.3 s。
+- 新工具 `retarget/tools/clip_to_pkl.py`：把训练片段转成 `viser_play_motion.py` 能播的 pkl（含 HOME 和衔接段）。
+
+### 21.4 两段一起训练（`logs/nemov3_multi/2026-10-25_22-58-12_exp1_roller32_roller_house`）
+- 动作目录 `retarget/data/supermimic_motions/nemov3_multi/`：`roller32.csv`（34.6 s）加 `roller_house.csv`（10.3 s）。SuperMimic 本来就是在目录里的多段动作上训练（G1 是 40 段），策略靠目标里的未来参考帧区分是哪一段，采样按回报分箱。设定同 exp6b（手肘限位、轮心高度奖励加单边线性惩罚、网格轮子），种子 0。
+- 回报：
+
+| 迭代 | 1000 | 2000 | 3000 | 3500 | 4000 | 4500 | 5000 | 5500 | 6000 | 6500 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 平均 | 0.693 | 0.860 | 0.883 | 0.886 | 0.899 | 0.907 | 0.912 | 0.912 | **0.9125** | 0.910 |
+
+  全程 0/2 失败；第 6500 轮判定饱和，最好的 checkpoint 是第 6000 轮。第 6000 轮分段：roller32 **0.888**、roller_house **0.937**。
+- 各段指标（第 6000 轮，单轮时段中段的碰地不计头尾 0.2 s）：
+
+| | roller32 | roller_house |
+|---|---|---|
+| 中段点脚 | 1 次（0.08 s） | 1 次（0.14 s） |
+| 抬起轮高度 p10 / 中位数 | 3.7 / 4.8 cm | 4.8 / 6.7 cm |
+| 单轮时段 ZMP 偏离中位数 | 0.5–0.7 cm | 0.2 cm |
+| 髋 yaw 最大速度 | 3.4 rad/s | 2.1 rad/s |
+| HOME 静止时手肘（左 / 右） | +0.2 / −0.5° | +0.2 / −0.5° |
+| 根部水平误差 平均 / 最大 | 0.24 / 0.37 m | 0.09 / 0.16 m |
+
+- 对照单独训练的 roller32（exp6b：回报 0.902，点脚 0 次）：两段混合训练后 roller32 的回报 0.888，略低 0.014，在种子起伏范围内；roller32 的根部水平误差（0.24 m）比 exp6b（0.21 m）略大，仍是前面说的"位置慢慢飘开、不影响奖励"的现象。
+
+### 21.5 动作目录改名（2026-10-26）
+- 原来的 `supermimic_motions/nemov3/`（只有 roller32）改名为 `supermimic_motions/roller32/`；`robots/nemov3.py` 的默认动作目录改成 `nemov3_multi/`（roller32 + roller_house）。不带 `--motion_dir` 训练 nemov3，就是这两段一起训练；要只训练一段，用 `--motion_dir` 指向 `roller32/` 或 `roller_house/`。
+- 旧 run 的 `args.json` 里记录的是当时的路径（`nemov3`、`nemov3_z`、`nemov3_zb`、`nemov3_multi`）。用旧 run 评估旧动作时，要自己指定 `--motion_dir`（旧版动作在 `retarget/data/archive/supermimic_motions/`）。
