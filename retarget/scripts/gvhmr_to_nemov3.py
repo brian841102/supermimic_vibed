@@ -484,7 +484,10 @@ def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps, human
                 cfg.integrate_inplace(v, 0.1)
             dof[i] = cfg.q[qadr]
     com, cp, ax, bot, zmp = measure()
-    # 2) CoM over the support wheel
+    # 2) CoM over the support wheel. The support wheel is held in place (position cost 50), the other follows the CoM
+    # task softly (2). Switching between the two costs at the frame where the support changes let the wheel that had been
+    # dragged a few cm snap back in one frame (roller_house: right wheel 2 m/s for one frame), so the hold fades over ~0.3 s.
+    sup_hold = gaussian_filter1d(np.stack([(side == 0), (side == 1)], 1).astype(float), 0.1 * fps, axis=0)
     for _ in range(BAL_ITERS):
         _, lat = lateral_err(side, cp, ax, zmp)
         target = com.copy()
@@ -496,7 +499,7 @@ def balance_single_support(m, d, root_p, root_q, dof, order, movable, fps, human
             for k, s in enumerate(("left", "right")):
                 T = cfg.get_transform_frame_to_world(f"{s}_wheel_link", "body")
                 wheel_tasks[s].set_target(T)
-                wheel_tasks[s].set_position_cost(50.0 if k == side[i] else 2.0)
+                wheel_tasks[s].set_position_cost(2.0 + 48.0 * sup_hold[i, k])
             torso.set_target(cfg.get_transform_frame_to_world("link_torso", "body"))
             posture.set_target(cfg.q.copy())
             for _ in range(8):
