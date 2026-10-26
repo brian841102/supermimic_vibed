@@ -3,9 +3,11 @@
 The simulated robot is drawn solid; the reference motion is a translucent blue ghost (as in tools/render.py).
 Open http://localhost:8080 in a browser after starting it; drag to orbit, scroll to zoom.
 Usage: python tools/viser_play.py traj.npz [--port 8080] [--eval logs/<run>/ckpt_014000_eval.json]
+       python tools/viser_play.py --run_dir logs/<run> [--port 8080]   # checkpoint dropdown (latest + history) from ckpt_*_traj.npz
 """
 
 import argparse
+import glob
 import json
 import os
 import sys
@@ -63,7 +65,8 @@ class Robot:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("traj")
+    ap.add_argument("traj", nargs="?", default=None)
+    ap.add_argument("--run_dir", type=str, default=None, help="add a checkpoint dropdown from <run_dir>/ckpt_*_traj.npz (written by evaluate.py --watch)")
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--host", type=str, default="0.0.0.0")
     ap.add_argument("--eval", type=str, default=None, help="optional ckpt_*_eval.json to show per-clip normalized return")
@@ -72,9 +75,20 @@ def main():
     if a.robot:
         os.environ["SUPERMIMIC_ROBOT"] = a.robot
 
-    d = dict(np.load(a.traj))
+    def ckpt_files():
+        return sorted(glob.glob(os.path.join(a.run_dir, "ckpt_*_traj.npz"))) if a.run_dir else []
+
+    def load_ckpt(traj_path: str):
+        ev = traj_path.replace("_traj.npz", "_eval.json")
+        return dict(np.load(traj_path)), (json.load(open(ev))["per_clip"] if os.path.exists(ev) else {})
+
+    if a.run_dir:
+        assert ckpt_files(), f"no ckpt_*_traj.npz in {a.run_dir} (run evaluate.py --watch first)"
+        d, per_clip = load_ckpt(ckpt_files()[-1])
+    else:
+        d = dict(np.load(a.traj))
+        per_clip = json.load(open(a.eval))["per_clip"] if a.eval else {}
     names = [str(n) for n in d["names"]]
-    per_clip = json.load(open(a.eval))["per_clip"] if a.eval else {}
     spec = get_spec()
     model = mujoco.MjModel.from_xml_path(spec.mjcf_path)
     # q columns are in robot_spec order; the MJCF may declare its joints in another order
@@ -94,7 +108,20 @@ def main():
         client.camera.position = (3.0 * k, -3.0 * k, 1.6 * k)
         client.camera.look_at = (0.0, 0.0, 0.8 * k)
 
+    def ckpt_label(path: str) -> str:
+        it = int(os.path.basename(path)[5:11])
+        ev = path.replace("_traj.npz", "_eval.json")
+        ret = f" · {json.load(open(ev))['norm_return']:.3f}" if os.path.exists(ev) else ""
+        return f"it {it}{ret}"
+
+    def ckpt_options() -> dict[str, str]:  # label -> traj path, "latest" first, then history newest to oldest
+        files = ckpt_files()[::-1]
+        return {f"latest ({ckpt_label(files[0])})": files[0], **{ckpt_label(f): f for f in files}}
+
     with server.gui.add_folder("Playback"):
+        if a.run_dir:
+            opts = ckpt_options()
+            ckpt_dd = server.gui.add_dropdown("Checkpoint", options=tuple(opts), initial_value=next(iter(opts)))
         clip_dd = server.gui.add_dropdown("Clip", options=tuple(names), initial_value=names[0])
         playing = server.gui.add_checkbox("Playing", initial_value=True)
         speed = server.gui.add_slider("Speed", min=0.1, max=3.0, step=0.1, initial_value=1.0)
@@ -141,6 +168,20 @@ def main():
     def _(_):
         clip_dd.value = names[(names.index(clip_dd.value) + 1) % len(names)]
 
+    if a.run_dir:
+        shown = {"opts": opts, "path": next(iter(opts.values())), "latest": True}
+
+        def load_selected():
+            nonlocal d, per_clip
+            d, per_clip = load_ckpt(shown["path"])
+            select(clip_dd.value)
+
+        @ckpt_dd.on_update
+        def _(_):
+            shown["latest"] = ckpt_dd.value.startswith("latest")
+            shown["path"] = shown["opts"][ckpt_dd.value]
+            load_selected()
+
     @show_ghost.on_update
     def _(_):
         ghost.set_visible(show_ghost.value)
@@ -162,8 +203,17 @@ def main():
         pts = np.zeros((len(xy) - 1, 2, 3), np.float32)
         pts[:, 0, :2], pts[:, 1, :2], pts[..., 2] = xy[:-1], xy[1:], 0.005
         trails[name] = server.scene.add_line_segments(f"/world/{name}", points=pts, colors=color, line_width=3.0)
+    next_scan = 0.0
     while True:
         now = time.time()
+        if a.run_dir and now > next_scan:  # new checkpoints appear while training goes on
+            next_scan = now + 10.0
+            opts_new = ckpt_options()
+            if list(opts_new) != list(shown["opts"]):
+                shown["opts"] = opts_new
+                keep = next(iter(opts_new)) if shown["latest"] else next((k for k, v in opts_new.items() if v == shown["path"] and not k.startswith("latest")), None)
+                ckpt_dd.options = tuple(opts_new)
+                ckpt_dd.value = keep or next(iter(opts_new))
         if abs(t_slider.value - t_shown) > 1e-6:  # the user dragged the slider, or a clip was selected
             t_play = t_slider.value
         if playing.value:
