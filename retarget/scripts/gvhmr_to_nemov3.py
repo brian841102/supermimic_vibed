@@ -212,6 +212,7 @@ def lowpass(x, win=9, order=3):
 
 BAL_MIN_S = 0.5  # s: single-support phases shorter than this are not kept (GVHMR foot spikes last ~0.3-0.4 s)
 BAL_HUMAN_ON, BAL_HUMAN_OFF = 0.05, 0.035  # m: human foot above the other foot -> lifted / back down (hysteresis; GVHMR feet wander 3-4 cm)
+BAL_ROBOT_LIFT = 0.025  # m: a retargeted wheel bottom above this for >= BAL_MIN_S counts as lifted too (see robot_lift_phases)
 BAL_RAMP_S = 0.4  # s: the CoM shift fades in before lift-off and out after touch-down
 BAL_ITERS = 2  # plan -> IK passes (the second re-plans from the CoM the IK actually reached)
 BAL_LIFT_MIN = 0.045  # m: lifted wheel bottom at least this high inside single-wheel phases (ground clearance)
@@ -247,6 +248,33 @@ def human_lift_phases(frames, fps):
             else:
                 i += 1
         out[s] = up
+    return out
+
+
+def robot_lift_phases(bottom, human_lift, fps):
+    """human_lift plus the wheels that the retargeted robot holds above BAL_ROBOT_LIFT for at least BAL_MIN_S.
+
+    The human foot height (ankle / toe above the other foot) cannot tell a real low lift (three_turn right foot 7.9-10.1 s,
+    2-5 cm, the video shows it lifted) from a heel raise (roller40 18-21 s, 2-5 cm, toe down): both read the same, so the
+    thresholds of human_lift_phases stay as they are. After ground_unlifted_feet the robot wheel only stays up where the
+    skater's foot really is, so such a wheel gets the same clearance and CoM balance as a clearly lifted one."""
+    from scipy.ndimage import binary_closing
+
+    out = {}
+    for s in ("left", "right"):
+        up = binary_closing(bottom[s] > BAL_ROBOT_LIFT, np.ones(2 * max(int(0.1 * fps), 1) + 1, bool))
+        i = 0
+        while i < len(up):
+            if up[i]:
+                j = i
+                while j < len(up) and up[j]:
+                    j += 1
+                if j - i < BAL_MIN_S * fps:
+                    up[i:j] = False
+                i = j
+            else:
+                i += 1
+        out[s] = human_lift[s] | up
     return out
 
 
@@ -560,7 +588,13 @@ def postprocess(qpos_ik, ik_names, fps, variant, balance=True, human_lift=None):
 
     # 1) ground alignment; 2) single-wheel balance (then the ground again: the legs changed)
     centres, axles, bottom = ground()
+    if balance and human_lift is not None:
+        merged = robot_lift_phases(bottom, human_lift, fps)
+        added = {s: round(float((merged[s] & ~human_lift[s]).sum() / fps), 2) for s in merged}
+        human_lift = merged
     stats = {"joint_limit_violation_frac_before_clip": viol_frac}
+    if balance and human_lift is not None:
+        stats["lift_added_by_robot_wheels_s"] = added
     if balance:
         stats["balance"] = balance_single_support(m, d, root_p, root_q, dof, order, {n for n in ik_names if "hip" in n or "calf" in n}, fps, human_lift)
         # the balance IK solves every frame on its own and can flip the leg between frames (three_turn: right hip yaw 4.9 ->
