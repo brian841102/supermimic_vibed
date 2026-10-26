@@ -124,12 +124,15 @@ with launch_simulation(sim_cfg, args):
             it = int(os.path.basename(c)[5:11])
             ck = torch.load(c, map_location=dev)
             t0 = time.time()
-            res = evaluate(env, ck)
+            res = evaluate(env, ck, c.replace(".pt", "_traj.npz"))  # trajectories for tools/viser_play.py --run_dir
             line = f"{it},{ck['wall_time'] / 3600:.4f},{ck['saved_at']},{time.strftime('%Y-%m-%d %H:%M:%S')},{res['norm_return']:.4f},{res['norm_return_framew']:.4f},{res['n_failed']},{'|'.join(res['failed'])}\n"
             open(out_csv, "a").write(line)
             json.dump(res, open(c.replace(".pt", "_eval.json"), "w"), indent=1)
             print(f"[eval] it {it} ({ck['wall_time'] / 3600:.2f} h): norm return {res['norm_return']:.4f}, failed {res['n_failed']}/{C} ({time.time() - t0:.0f}s)", flush=True)
             done.add(it)
+        for c in ckpts:  # evaluated before trajectories were recorded
+            if not os.path.exists(c.replace(".pt", "_traj.npz")) and int(os.path.basename(c)[5:11]) in done:
+                evaluate(env, torch.load(c, map_location=dev), c.replace(".pt", "_traj.npz"))
         if not args.watch:
             break
         time.sleep(60)
