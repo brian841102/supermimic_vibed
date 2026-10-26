@@ -514,9 +514,12 @@ def postprocess(qpos_ik, ik_names, fps, variant, balance=True, human_lift=None):
             root_q[i] = -root_q[i]
     root_q = lowpass(root_q)
     root_q /= np.linalg.norm(root_q, axis=1, keepdims=True)
-    for c, n in enumerate(order):  # hardware joint speed limits (URDF): legs 10 rad/s, arms >= 23.9 rad/s
-        if n in ik_names and ("hip" in n or "calf" in n):
-            dof[:, c] = rate_limit(dof[:, c], (HIP_YAW_RATE_MAX if "hip_yaw" in n else 10.0) / fps)
+    def limit_leg_rates():
+        for c, n in enumerate(order):  # hardware joint speed limits (URDF): legs 10 rad/s, arms >= 23.9 rad/s
+            if n in ik_names and ("hip" in n or "calf" in n):
+                dof[:, c] = rate_limit(dof[:, c], (HIP_YAW_RATE_MAX if "hip_yaw" in n else 10.0) / fps)
+
+    limit_leg_rates()
     lim = m.jnt_range[[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n) for n in order]]
     limited = np.array([m.jnt_limited[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, n)] for n in order], bool)
     viol_frac = float(((dof[:, limited] < lim[limited, 0] - 1e-6) | (dof[:, limited] > lim[limited, 1] + 1e-6)).any(1).mean())
@@ -560,6 +563,10 @@ def postprocess(qpos_ik, ik_names, fps, variant, balance=True, human_lift=None):
     stats = {"joint_limit_violation_frac_before_clip": viol_frac}
     if balance:
         stats["balance"] = balance_single_support(m, d, root_p, root_q, dof, order, {n for n in ik_names if "hip" in n or "calf" in n}, fps, human_lift)
+        # the balance IK solves every frame on its own and can flip the leg between frames (three_turn: right hip yaw 4.9 ->
+        # 8.0 rad/s, right calf 3.2 -> 9.1 rad/s), so the speed limits are applied again
+        limit_leg_rates()
+        dof[:, limited] = np.clip(dof[:, limited], lim[limited, 0], lim[limited, 1])
         centres, axles, bottom = ground()
     # 3) wheels: no-slip rolling, omega = (v . d) / r while in contact
     dt = 1.0 / fps
