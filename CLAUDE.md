@@ -10,6 +10,7 @@
 - `README.md` / `README_CN.md`：G1 复现的安装与指令；`MILESTONES.md`：G1 复现的里程碑。
 - `retarget/README.md`：重定向与 nemov3 训练的安装依赖、常用指令。
 - `retarget/MILESTONE.md`：计划书、开发中遇到的坑、因此做的调整（按章节追加）。
+- `retarget/VIDEO.md`：训练素材的来源、原视频位置、调整（裁剪等）和动作类型。**用户每新增一段动作，先问用户怎么描述这段动作**：属于哪一类（舞蹈 / 情绪动作 / 特技，或新增一类）、动作内容、有没有交叉步、单轮滑行的时间等，再写进 VIDEO.md。
 
 ## 机型选择
 - 环境变量 `SUPERMIMIC_ROBOT=g1|nemov3`（或 `--robot`），必须在 import `supermimic.mdp` 之前设定；默认 `g1`。

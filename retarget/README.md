@@ -16,6 +16,7 @@
 retarget/
 ├── README.md                  # 本文件：安装与常用指令
 ├── MILESTONE.md               # 计划书 + 开发记录（坑与调整）
+├── VIDEO.md                   # 训练素材：来源、原视频位置、调整（裁剪等）、动作类型
 ├── configs/smplx_to_nemo_v3.json   # GMR 的 IK 配置（full / hw 共用）
 ├── patches/gvhmr_skating.patch     # 对 GVHMR 的补丁
 ├── scripts/                   # 主流程（产出数据）：生成模型、相机轨迹、重定向、一键脚本
@@ -33,7 +34,7 @@ retarget/data/
 ├── gvhmr_nopp/<视频名>/       # GVHMR 输出（hmr4d_results.pt、渲染视频）
 ├── gvhmr_cam/<视频名>/        # 加上相机轨迹、修好朝向翻转和左右腿互换的 hmr4d_results.pt（重定向的输入）
 ├── retarget_out/              # <视频名>_{full,hw}.{csv,pkl,json}、对比视频、<视频名>_clip.pkl（训练片段的播放版）
-├── supermimic_motions/        # 训练动作：roller32/、roller_house/ 各一段；nemov3_multi/ 是默认训练目录（两段的复制）
+├── supermimic_motions/        # 训练动作：roller32/、roller_house/、three_turn/ 各一段；nemov3_multi/ 是默认训练目录（这些段的复制）
 ├── archive/                   # 旧版动作（让旧 run 可以重现）
 └── run_<视频名>.log、viser_8080.{log,pid}
 

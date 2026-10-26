@@ -94,7 +94,7 @@ def spec() -> RobotSpec:
         default_q=tuple(DEFAULT_Q.get(n, 0.0) for n in JOINT_NAMES),
         action_scale=tuple(WHEEL_ACTION_SCALE if n in WHEELS else POS_ACTION_SCALE for n in JOINT_NAMES),
         articulation_cfg=articulation_cfg,
-        motion_dir=os.path.join(REPO, "retarget", "data", "supermimic_motions", "nemov3_multi"),  # roller32 + roller_house
+        motion_dir=os.path.join(REPO, "retarget", "data", "supermimic_motions", "nemov3_multi"),  # roller32 + roller_house + three_turn
         com_body="link_torso",
         com_range=(0.0125, 0.025, 0.025),
         velocity_joints=WHEELS,
