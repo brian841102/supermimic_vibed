@@ -186,6 +186,28 @@ def repair_leg_swaps(c, betas, thresh=0.2, win=31, pad=3, max_s=0.7, isolate_s=1
     return segs, skipped, sep
 
 
+def floor_fit_rotation(c, R_c2w, iters=15):
+    """Rotation Q (about the world origin) that makes the floor, fitted to the lowest foot points of the whole clip, horizontal.
+
+    GVHMR's gravity (camera tilt) has errors of ~10 deg; with a person walking along the viewing direction the depth offset
+    between the two feet then becomes a height difference (three_turn: the planted left foot read 7 cm high while the right
+    foot trailing behind it was lifted). The lowest of the ankles / toes in each frame stands on the floor, so a plane fitted
+    to them gives the true up direction (needs a flat floor and a camera that only rotates). Returns (Q, tilt in degrees).
+    """
+    n = len(c["body_pose"])
+    bm = smplx.create(BODY_MODELS, "smplx", gender="neutral", use_pca=False, num_betas=c["betas"].shape[1], batch_size=n)
+    with torch.no_grad():
+        J = bm(betas=c["betas"].float(), body_pose=c["body_pose"].float(), global_orient=c["global_orient"].float(), transl=c["transl"].float()).joints.numpy()
+    feet = np.stack([R_c2w[i].apply(J[i, [7, 8, 10, 11]]) for i in range(n)])  # world axes, camera at the origin
+    up = np.array([0.0, 1.0, 0.0])
+    for _ in range(iters):
+        low = feet[np.arange(n), np.argmin(feet @ up, axis=1)]
+        nrm = np.linalg.svd(low - low.mean(0), full_matrices=False)[2][-1]
+        up = nrm if nrm @ up > 0 else -nrm
+    Q = R.align_vectors([[0.0, 1.0, 0.0]], [up])[0]
+    return Q, float(np.degrees(np.arccos(np.clip(up[1], -1, 1))))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pred", required=True)
@@ -196,6 +218,7 @@ def main():
     ap.add_argument("--bbx", default=None, help="zoom-aware mode: GVHMR preprocess/bbx.pt (default: next to --pred)")
     ap.add_argument("--no_flip_repair", action="store_true", help="keep GVHMR's in-camera orientations as they are")
     ap.add_argument("--no_leg_swap_repair", action="store_true", help="keep GVHMR's brief left / right leg swaps")
+    ap.add_argument("--floor_fit", action="store_true", help="re-level gravity with a floor plane fitted to the lowest foot points (fixes tilt errors of GVHMR's camera pose)")
     a = ap.parse_args()
     d = torch.load(a.pred, map_location="cpu")
     g, c = d["smpl_params_global"], d["smpl_params_incam"]
@@ -230,6 +253,10 @@ def main():
         print(f"zoom-aware: background zoom x{Z.min():.2f}..x{Z.max():.2f} (median 1), depth {np.percentile(pelvis_cam[:, 2], 5):.1f}-"
               f"{np.percentile(pelvis_cam[:, 2], 95):.1f} m (GVHMR {np.percentile(c['transl'][:, 2].numpy(), 5):.1f}-{np.percentile(c['transl'][:, 2].numpy(), 95):.1f} m)")
     pelvis_cam = gaussian_filter1d(pelvis_cam, a.pos_sigma, axis=0, mode="nearest")
+    if a.floor_fit:
+        Q, tilt = floor_fit_rotation(c, R_c2w)
+        R_c2w = Q * R_c2w
+        print(f"floor fit: GVHMR's up direction was {tilt:.1f} deg off the fitted floor normal; gravity re-levelled")
     pelvis_w = R_c2w.apply(pelvis_cam)
     old = g["transl"].numpy()
     new = pelvis_w - J0
